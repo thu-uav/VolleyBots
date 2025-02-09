@@ -1,7 +1,7 @@
 # VolleyBots: A Testbed for Multi-Drone Volleyball Game Combining Motion Control and Strategic Play
 
 [![arXiv](https://img.shields.io/badge/arXiv-2502.01932-red.svg)](http://arxiv.org/abs/2502.01932)
-[![Website](https://img.shields.io/badge/Website-Volleybots-green.svg)](https://sites.google.com/view/volleybots/home)
+[![Website](https://img.shields.io/badge/Website-VolleyBots-green.svg)](https://sites.google.com/view/thu-volleybots/home)
 [![IsaacSim](https://img.shields.io/badge/Isaac%20Sim-2023.1.0.hotfix.1-orange.svg)](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html)
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://docs.python.org/3/whatsnew/3.10.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
