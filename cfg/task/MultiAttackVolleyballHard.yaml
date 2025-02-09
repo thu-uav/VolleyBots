@@ -1,0 +1,62 @@
+name: MultiAttackVolleyballHard
+
+defaults:
+  # see https://hydra.cc/docs/advanced/overriding_packages/
+  - /base/env_base@_here_
+  - /base/sim_base@_here_
+  # - /base/randomization_base@_here_
+
+# sim:
+#   dt: 0.005
+#   substeps: 4
+
+ball_mass: 0.005 # kg
+ball_radius: 0.1 # m
+reward_shaping: true
+anchor: [[2.0, -2.5, 2.5], [2.0, 2.5, 3.5]]
+anchor_radius: 0.5
+target: [-4.5, 0.0]
+target_radius: 1.0
+init_drone_pos_dist: # relative to anchor
+  low: [-0.5, -0.5, -0.2]
+  high: [0.5, 0.5, 0.2]
+ball_offset: [0.0, 0.0, 2.0]
+tanh_action: False
+board_offset: [-4.,0.0, 0.5]
+board_mass: 0.8 # kg
+board_radius: 0.5 # m
+board_height: 0.3
+
+dist_max: 8 #  m/s
+rpy_max: 4 # rad/s
+
+court:  # standard volleyball court: 18m x 9m, net: 2.43m (man) x 1m
+  L: 18.0  
+  W: 9.0
+  H_NET: 2.43
+  W_NET: 1.0
+
+stats:
+  done_drone_too_close_to_net: true
+  done_drone_out_of_boundary: false
+  done_drone_too_low: true
+  done_drone_misbehave: true
+
+  done_ball_too_low: true
+  done_ball_too_high: true
+  done_ball_out_of_boundary: true
+  done_ball_hit_the_net: true
+  done_ball_misbehave: true
+  
+  reward: true
+  angular_deviation: false
+
+env:
+  num_envs: 4096
+  max_episode_length: 800
+
+drone_model: Iris
+force_sensor: false
+time_encoding: true
+
+action_transform: null

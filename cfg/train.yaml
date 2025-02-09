@@ -1,0 +1,44 @@
+# hydra.job.chdir: false
+
+headless: true
+
+sim: ${task.sim}
+env: ${task.env}
+
+total_frames: 200_000_000
+max_iters: -1
+eval_interval: -1
+save_interval: -1
+seed: 0
+
+only_eval: false
+only_eval_one_traj: false
+eval_type: false
+use_debug_policy: false
+
+policy_checkpoint_path: 
+
+use_local_usd: true
+
+viewer:
+  resolution: [960, 720]
+  eye: [18., 0., 10.] # [7., 0., 5.]
+  lookat: [0., 0., 1.] # [0., 0., 1.]
+
+run_name_suffix:
+
+wandb:
+  group: ${oc.select:..task.name}
+  run_name: ${oc.select:..task.name,test}-${oc.select:..algo.name,none}
+  job_type: train
+  entity: nics_marl
+  project: omnidrones
+  mode: online # set to 'disabled' when debugging locally
+  run_id:
+  monitor_gym: True
+  tags:
+
+defaults:
+  - task: SingleJuggleVolleyball
+  - algo: mappo
+  - _self_

@@ -1,0 +1,41 @@
+name: mat
+
+# ppo
+train_every: 64
+num_minibatches: 16
+ppo_epochs: 4
+clip_param: 0.1 # 0.2 可能需要搜索
+entropy_coef: 0.001 # 0.01
+value_loss_coef : 1.0
+gae_lambda: 0.95
+gamma: 0.995 # 0.99
+max_grad_norm: 10.0
+normalize_advantages: True
+
+dec_actor: false
+share_actor: true
+critic_input: obs # `obs` or `state`
+
+
+lr: 0.00003
+lr_scheduler: 
+lr_scheduler_kwargs:
+weight_decay: 0.0
+gain: 0.01
+
+value_norm:
+  class: ValueNorm1
+  kwargs: 
+    beta: 0.995
+
+output_dist_params: true
+use_huber_loss: true
+huber_delta: 10
+
+encode_state: false
+_use_clipped_value_loss: true
+
+
+n_block: 3
+n_embd: 256
+n_head: 8

@@ -1,0 +1,49 @@
+name: SingleJuggleVolleyball
+
+defaults:
+  # see https://hydra.cc/docs/advanced/overriding_packages/
+  - /base/env_base@_here_
+  - /base/sim_base@_here_
+  # - /base/randomization_base@_here_
+
+ball_mass: 0.005 # kg
+ball_radius: 0.1 # m
+anchor: [4.5, 0, 2.0]
+min_height: 4
+# target: [4.5, 2.5, 2.0]
+init_drone_pos_dist: # relative to anchor
+  low: [-0.5, -0.5, -0.2]
+  high: [0.5, 0.5, 0.2]
+ball_offset: [0.0, 0.0, 2.0]
+tanh_action: False
+
+court:
+  L: 18.0
+  W: 9.0
+  H_NET: 2.43
+  W_NET: 1.0
+
+stats:
+  done_drone_too_close_to_net: true
+  done_drone_out_of_boundary: false
+  done_drone_too_low: true
+  done_drone_misbehave: true
+
+  done_ball_too_low: true
+  done_ball_too_high: true
+  done_ball_out_of_boundary: true
+  done_ball_misbehave: true
+  
+  reward: true
+  angular_deviation: false
+
+env:
+  num_envs: 4096
+  max_episode_length: 800
+
+drone_model: Iris
+force_sensor: false
+time_encoding: true
+
+throttles_in_obs: false
+action_transform: null

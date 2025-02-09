@@ -1,0 +1,57 @@
+# hydra.job.chdir: false
+
+headless: true
+
+sim: ${task.sim}
+env: ${task.env}
+
+use_local_usd: true
+
+run_name_suffix:
+
+policy_checkpoint_path:
+actor_0_checkpoint_path:
+actor_1_checkpoint_path:
+
+total_frames: 500_000_000
+update_interval: 20
+
+solver_type: fsp
+mean_threshold: 0.9 # 0.9
+std_threshold: 0.02 # 0.02
+min_iter_steps: 50 # 50
+max_iter_steps: 500
+
+first_id: 0 # 0 or 1
+
+init_by_latest_strategy: true
+
+share_population: false
+
+max_population_size: false
+
+save_meta_policy: true
+
+seed: 12345
+
+
+viewer:
+  resolution: [960, 720]
+  eye: [18., 0, 10.]
+  lookat: [0., 0., 1.]
+
+wandb:
+  group: ${task.name}-${algo.name}
+  run_name: ${oc.select:..task.name,test}-${oc.select:..algo.name,none}
+  job_type: train
+  entity: nics_marl
+  project: omnidrones
+  mode: online # set to 'disabled' when debugging locally
+  run_id:
+  monitor_gym: True
+  tags:
+
+defaults:
+  - task: Volleyball1v1
+  - algo: psro
+  - _self_

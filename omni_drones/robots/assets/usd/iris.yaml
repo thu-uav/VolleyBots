@@ -1,0 +1,52 @@
+name: iris
+
+# sim2real
+target_clip: 0.8 # clip the target rate
+max_thrust_ratio: 1.0 # clip the target thrust
+fixed_yaw: false
+use_cbf: false
+use_action_smooth: false
+epsilon: 0.01 # action smooth
+
+inertia:
+  xx: 0.0347563
+  xy: 0.0
+  xz: 0.0
+  yy: 0.0458929
+  yz: 0.0
+  zz: 0.0977
+mass: 1.52
+l: 0.5
+drag_coef: 0.2
+rotor_configuration:
+  arm_lengths:
+  - 0.255539
+  - 0.238537
+  - 0.255539
+  - 0.238537
+  directions:
+  - 1.0
+  - 1.0
+  - -1.0
+  - -1.0
+  force_constants:
+  - 8.54858e-06
+  - 8.54858e-06
+  - 8.54858e-06
+  - 8.54858e-06
+  max_rotation_velocities:
+  - 838
+  - 838
+  - 838
+  - 838
+  moment_constants:
+  - 1.3677728816219314e-07
+  - 1.3677728816219314e-07
+  - 1.3677728816219314e-07
+  - 1.3677728816219314e-07
+  num_rotors: 4
+  rotor_angles:
+  - -0.533708
+  - 2.565218
+  - 0.533708
+  - -2.565218

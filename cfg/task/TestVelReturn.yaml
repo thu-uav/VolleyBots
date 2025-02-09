@@ -1,0 +1,35 @@
+name: TestVelReturn
+
+defaults:
+  # see https://hydra.cc/docs/advanced/overriding_packages/
+  - /base/env_base@_here_
+  - /base/sim_base@_here_
+
+env:
+  num_envs: 4096
+  max_episode_length: 800
+
+
+court:  # standard volleyball court: 18m x 9m, net: 2.43m (man) x 1m
+  L: 18.0  
+  W: 9.0
+  H_NET: 2.43
+  W_NET: 1.0
+
+
+drone_model: Crazyflie
+force_sensor: false
+time_encoding: true
+
+anchor: [[4.5, 0., 2.]]
+anchor_1: [[9.0, 4.5, 2.]]
+anchor_radius: 0.5
+reward_effort_weight: 0.1
+reward_action_smoothness_weight: 0.0
+reward_motion_smoothness_weight: 0.02
+reward_distance_scale: 1.2
+reward_velocity_factor: 0.0
+
+throttles_in_obs: false
+action_transform: null
+
