@@ -1,0 +1,9 @@
+[submodule "third_party/orbit"]
+	path = third_party/orbit
+	url = git@github.com:zrz-sh/orbit.git
+[submodule "third_party/tensordict"]
+	path = third_party/tensordict
+	url = git@github.com:zrz-sh/tensordict.git
+[submodule "third_party/rl"]
+	path = third_party/rl
+	url = git@github.com:zrz-sh/rl.git
