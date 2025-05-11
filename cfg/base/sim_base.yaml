@@ -16,8 +16,8 @@ sim:
   # enable_scene_query_support: true # for Lidars (to be implemented)
 
   # GPU buffers
-  gpu_max_rigid_contact_count: 2524288
-  gpu_max_rigid_patch_count: 863840 # 33554432
+  gpu_max_rigid_contact_count: 8388608
+  gpu_max_rigid_patch_count: 2097152 # 33554432
   gpu_found_lost_pairs_capacity: 4194304
   gpu_found_lost_aggregate_pairs_capacity: 33554432
   gpu_total_aggregate_pairs_capacity: 4194304
