@@ -10,9 +10,9 @@ CUDA_VISIBLE_DEVICES=0 python ../train_psro_br.py headless=true \
     max_iter_steps=5000 \
     mean_threshold=1.00 \
     seed=0 \
-    append_actors_0_from_path="/home/zhangruize/OmniDrones/scripts/shell/br/population" \
+    append_actors_0_from_path="/home/zhangruize/VolleyBots/scripts/shell/br/population" \
     # wandb.mode=disabled # debug
-    # load_meta_policy_path="/home/zhangruize/OmniDrones/scripts/shell/br/meta_policy_iter_2.npz" \
+    # load_meta_policy_path="/home/zhangruize/VolleyBots/scripts/shell/br/meta_policy_iter_2.npz" \
     
     
     

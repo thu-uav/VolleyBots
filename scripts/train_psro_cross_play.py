@@ -22,13 +22,13 @@ from torch import vmap
 from torchrl.envs.transforms import Compose, InitTracker, TransformedEnv
 from tqdm import tqdm
 
-import omni_drones.utils.volleyball.elopy as elopy
-from omni_drones import CONFIG_PATH, init_simulation_app
-from omni_drones.learning import PSROPolicy
-from omni_drones.utils.psro.convergence import ConvergedIndicator
-from omni_drones.utils.psro.meta_solver import get_meta_solver
-from omni_drones.utils.torchrl import AgentSpec, SyncDataCollector
-from omni_drones.utils.wandb import init_wandb
+import volley_bots.utils.volleyball.elopy as elopy
+from volley_bots import CONFIG_PATH, init_simulation_app
+from volley_bots.learning import PSROPolicy
+from volley_bots.utils.psro.convergence import ConvergedIndicator
+from volley_bots.utils.psro.meta_solver import get_meta_solver
+from volley_bots.utils.torchrl import AgentSpec, SyncDataCollector
+from volley_bots.utils.wandb import init_wandb
 
 
 class Every:
@@ -57,7 +57,7 @@ def get_policy(cfg: DictConfig, agent_spec: AgentSpec):
 def get_transforms(
     cfg: DictConfig, base_env, logger_func: Callable[[Dict], None] = None
 ):
-    from omni_drones.utils.torchrl.transforms import LogOnEpisode
+    from volley_bots.utils.torchrl.transforms import LogOnEpisode
 
     stats_keys = [
         k
@@ -78,8 +78,8 @@ def get_transforms(
     if action_transform is None:
         pass
     elif action_transform == "rate":
-        from omni_drones.controllers import RateController as _RateController
-        from omni_drones.utils.torchrl.transforms import RateController
+        from volley_bots.controllers import RateController as _RateController
+        from volley_bots.utils.torchrl.transforms import RateController
 
         controller = _RateController(9.81, base_env.drone.params).to(base_env.device)
         transform = RateController(controller)
@@ -251,7 +251,7 @@ def main(cfg: DictConfig):
     simulation_app = init_simulation_app(cfg)
     print(OmegaConf.to_yaml(cfg))
 
-    from omni_drones.envs.isaac_env import IsaacEnv
+    from volley_bots.envs.isaac_env import IsaacEnv
 
     env_class = IsaacEnv.REGISTRY[cfg.task.name]
     base_env = env_class(cfg, headless=cfg.headless)

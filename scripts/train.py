@@ -17,17 +17,17 @@ from torch import nn, vmap
 from torchrl.envs.transforms import Compose, InitTracker, TransformedEnv
 from tqdm import tqdm
 
-from omni_drones import CONFIG_PATH, init_simulation_app
-from omni_drones.learning import HAPPOPolicy, MADDPGPolicy, MAPPOPolicy, MATPolicy
-from omni_drones.utils.torchrl import AgentSpec, SyncDataCollector
-from omni_drones.utils.torchrl.transforms import (
+from volley_bots import CONFIG_PATH, init_simulation_app
+from volley_bots.learning import HAPPOPolicy, MADDPGPolicy, MAPPOPolicy, MATPolicy
+from volley_bots.utils.torchrl import AgentSpec, SyncDataCollector
+from volley_bots.utils.torchrl.transforms import (
     FromDiscreteAction,
     FromMultiDiscreteAction,
     History,
     LogOnEpisode,
     ravel_composite,
 )
-from omni_drones.utils.wandb import init_wandb
+from volley_bots.utils.wandb import init_wandb
 
 
 class Every:
@@ -86,7 +86,7 @@ class debug_policy(nn.Module):
         return tensordict
 
 
-from omni_drones.utils.stats import PROCESS_FUNC
+from volley_bots.utils.stats import PROCESS_FUNC
 
 
 @hydra.main(version_base=None, config_path=CONFIG_PATH, config_name="train")
@@ -106,7 +106,7 @@ def main(cfg: DictConfig):
 
     setproctitle(run.name)
 
-    from omni_drones.envs.isaac_env import IsaacEnv
+    from volley_bots.envs.isaac_env import IsaacEnv
 
     algos = {
         "mappo": MAPPOPolicy,
@@ -154,15 +154,15 @@ def main(cfg: DictConfig):
 
     action_transform: str = cfg.task.get("action_transform", None)
     if action_transform == "rate":
-        from omni_drones.controllers import RateController as _RateController
-        from omni_drones.utils.torchrl.transforms import RateController
+        from volley_bots.controllers import RateController as _RateController
+        from volley_bots.utils.torchrl.transforms import RateController
 
         controller = _RateController(9.81, base_env.drone.params).to(base_env.device)
         transform = RateController(controller)
         transforms.append(transform)
     elif action_transform == "PIDrate":  # CTBR
-        from omni_drones.controllers import PIDRateController as _PIDRateController
-        from omni_drones.utils.torchrl.transforms import PIDRateController
+        from volley_bots.controllers import PIDRateController as _PIDRateController
+        from volley_bots.utils.torchrl.transforms import PIDRateController
 
         controller = _PIDRateController(cfg.sim.dt, 9.81, base_env.drone.params).to(
             base_env.device
