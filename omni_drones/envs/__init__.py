@@ -1,4 +1,4 @@
-from .competitive import Volleyball1v1, Volleyball3v3
+from .competitive import Volleyball1v1, Volleyball3v3, Volleyball6v6
 from .cooperative import (
     MultiAttackVolleyballEasy,
     MultiAttackVolleyballHard,

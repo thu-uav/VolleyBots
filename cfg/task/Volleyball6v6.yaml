@@ -1,0 +1,40 @@
+name: Volleyball6v6
+
+defaults:
+  # see https://hydra.cc/docs/advanced/overriding_packages/
+  # - /base/env_base@_here_
+  - /base/sim_base@_here_
+  # - /base/randomization_base@_here_
+
+env:
+  num_envs: 2048
+  env_spacing: 50
+  max_episode_length: 500
+  min_episode_length: 50
+
+ball_mass: 0.005 # kg
+ball_radius: 0.1 # m
+
+# https://www.dimensions.com/element/badminton-court
+court:
+  L: 18
+  W: 9
+  H_NET: 2.43
+  W_NET: 0.76
+
+anchor: [[3.0, -3.0, 2.0], [3.0, 0.0, 2.0], [3.0, 3.0, 2.0], [6.0, -3.0, 2.0], [9.0, 0.0, 2.0], [6.0, 3.0, 2.0]]
+
+stats:
+  win_case: true
+
+initial:
+  init_pos: [[3.0, -3.0, 2.0], [3.0, 0.0, 2.0], [3.0, 3.0, 2.0], [6.0, -3.0, 2.0], [9.0, 0.0, 2.0], [6.0, 3.0, 2.0]]
+  ball_offset: [0.0, 0.0, 3.0]
+  ball_initial_z_vel: 0.0
+  init_on_the_spot: true
+
+random_turn: false
+drone_model: Iris
+force_sensor: false
+action_transform: null
+symmetric_obs: true

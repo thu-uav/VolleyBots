@@ -251,3 +251,90 @@ def determine_game_result_3v3(
     result = (result[:, 1] - result[:, 0]).unsqueeze(-1)  # (E,1)
 
     return draw, result, cases
+
+
+def determine_game_result_6v6(
+    L: float,
+    W: float,
+    H_NET: float,
+    ball_radius: float,
+    ball_pos: torch.Tensor,
+    last_hit_team: torch.Tensor,
+    wrong_hit_turn: torch.Tensor,
+    wrong_hit_racket: torch.Tensor,
+    drone_pos: torch.Tensor,
+    anchor: torch.Tensor,
+) -> torch.Tensor:
+    """_summary_
+
+    Args:
+        L (float): _description_
+        W (float): _description_
+        H_NET (float): _description_
+        ball_radius (float): _description_
+
+        ball_pos (torch.Tensor): (E,1,3)
+        last_hit_team (torch.Tensor): (E,)
+        wrong_hit_turn (torch.Tensor): (E,12)
+        wrong_hit_racket (torch.Tensor): (E,12)
+        drone_pos (torch.Tensor): (E,12,3)
+        anchor (torch.Tensor): (12,3)
+
+    Returns:
+        torch.Tensor: (E,)
+    """
+
+    ball_hit_net = calculate_ball_hit_net(ball_pos, ball_radius, W, H_NET)  # (E,1)
+    ball_hit_ground = ball_pos[..., 2] < 0.2  # (E,1)
+    drone_hit_net = calculate_drone_hit_net(drone_pos, anchor, L, W)  # (E,6)
+    turn_one_hot = torch.nn.functional.one_hot(last_hit_team, 2)  # (E,2)
+    extended_turn_one_hot = torch.stack(
+        [turn_one_hot[:, 0] for _ in range(6)] + [turn_one_hot[:, 1] for _ in range(6)],
+        dim=1,
+    )  # (E,12)
+    wrong_hit = wrong_hit_turn | wrong_hit_racket  # (E,12)
+
+    # 击球犯规1: 击球的人不是击球方
+    case_1 = wrong_hit_turn  # (E,12)
+    case_1 = torch.stack(
+        [case_1[:, :6].any(-1), case_1[:, 6:].any(-1)], dim=-1
+    )  # (E,2)
+    # 击球犯规2: 使用非球拍部位击球
+    case_2 = wrong_hit_racket  # (E,6)
+    case_2 = torch.stack(
+        [case_2[:, :6].any(-1), case_2[:, 6:].any(-1)], dim=-1
+    )  # (E,2)
+    # 无人机越网
+    case_3 = drone_hit_net  # (E,6)
+    case_3 = torch.stack(
+        [case_3[:, :6].any(-1), case_3[:, 6:].any(-1)], dim=-1
+    )  # (E,2)
+    # 球落地
+    # 不用判断是哪方击的球
+    case_4 = ball_hit_ground & in_half_court(ball_pos, L, W)  # (E,2)
+    # 球出界
+    # 需要判断是哪方击的球：1）如果存在wrong_hit，那么wrong_hit的一方就是击球方；2）如果不存在wrong_hit，那么turn就是击球方
+    case_5 = (
+        _not_in_bounds(ball_pos, L, W)
+        & ball_hit_ground  # (E,1)
+        & extended_turn_one_hot
+    )  # (E,12)
+    case_5 = torch.stack(
+        [case_5[:, :6].any(-1), case_5[:, 6:].any(-1)], dim=-1
+    )  # (E,12)
+    # 球触网
+    # 需要判断是哪方击的球，同上
+    case_6 = ball_hit_net & extended_turn_one_hot  # (E,1)  # (E,6)
+    case_6 = torch.stack(
+        [case_6[:, :6].any(-1), case_6[:, 6:].any(-1)], dim=-1
+    )  # (E,2)
+
+    cases = torch.stack(
+        [case_1, case_2, case_3, case_4, case_5, case_6], dim=-1
+    )  # (E,2,6)
+
+    draw = cases.any(-1).all(1, keepdim=True)  # (E,1)
+    result = (cases.any(-1) & ~draw).int()  # (E,2)
+    result = (result[:, 1] - result[:, 0]).unsqueeze(-1)  # (E,1)
+
+    return draw, result, cases
