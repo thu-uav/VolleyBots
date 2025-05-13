@@ -1,0 +1,50 @@
+name: Volleyball3v3_hier
+
+defaults:
+  # see https://hydra.cc/docs/advanced/overriding_packages/
+  # - /base/env_base@_here_
+  - /base/sim_base@_here_
+  # - /base/randomization_base@_here_
+
+env:
+  num_envs: 4096
+  env_spacing: 35
+  max_episode_length: 500
+  min_episode_length: 50
+
+ball_mass: 0.005 # kg
+ball_radius: 0.1 # m
+
+# https://www.dimensions.com/element/badminton-court
+court:
+  L: 12
+  W: 6
+  H_NET: 2.43
+  W_NET: 0.76
+
+anchor: [[3.0, -1.5, 2.0], [3.0, 1.5, 2.0], [6.0, 0.0, 2.0]]
+
+stats:
+
+FirstPass_goto_pos_before_hit: [4.5, 0., 1.5]
+FirstPass_hover_pos_after_hit: [4.5, 0., 1.5]
+
+SecPass_goto_pos_before_hit: [2.0, -2.0, 1.8]
+SecPass_hover_pos_after_hit: [2.0, -2.0, 1.0]
+
+Att_goto_pos_before_hit: [2.0, 1.5, 2.5]
+Att_hover_pos_after_hit: [2.0, 0., 2.5]
+
+initial:
+  near_side_pos: [[3.0, -1.5, 2.0], [3.0, 1.5, 2.0], [6.0, 0.0, 2.0]]
+  serve_near_side_pos: [[2.0, -2.0, 1.8], [2.0, 1.5, 2.5], [6.0, 0., 2.0]]
+  defend_near_side_pos: [[2.0, -2.0, 1.8], [2.0, 1.5, 2.5], [4.5, 0., 1.5]]
+  ball_offset: [0.0, 0.0, 3.0]
+  ball_initial_z_vel: 0.0
+  init_on_the_spot: true
+
+random_turn: false
+drone_model: Iris
+force_sensor: false
+action_transform: null
+symmetric_obs: true

@@ -1,0 +1,58 @@
+# hydra.job.chdir: false
+
+headless: true
+
+sim: ${task.sim}
+env: ${task.env}
+
+total_frames: 500_000_000
+max_iters: -1
+eval_interval: -1
+save_interval: -1
+seed: 0
+
+only_eval: false
+only_eval_one_traj: false
+eval_type: false
+use_debug_policy: false
+
+Opp_policy_checkpoint_path: 
+
+FirstPass_serve_policy_checkpoint_path:
+FirstPass_serve_hover_policy_checkpoint_path:
+FirstPass_goto_policy_checkpoint_path: 
+FirstPass_policy_checkpoint_path: 
+FirstPass_hover_policy_checkpoint_path:
+
+SecPass_goto_policy_checkpoint_path: 
+SecPass_policy_checkpoint_path: 
+SecPass_hover_policy_checkpoint_path:
+
+Att_goto_policy_checkpoint_path: 
+Att_policy_checkpoint_path: 
+Att_hover_policy_checkpoint_path:
+
+use_local_usd: true
+
+viewer:
+  resolution: [960, 720]
+  eye: [11., 0., 7.5] # [4., 0., 4.]
+  lookat: [0., 0., 0.] # [0., 0., 1.]
+
+run_name_suffix:
+
+wandb:
+  group: ${oc.select:..task.name}
+  run_name: ${oc.select:..task.name,test}-${oc.select:..algo.name,none}
+  job_type: train
+  entity: nics_marl
+  project: omnidrones
+  mode: online # set to 'disabled' when debugging locally
+  run_id:
+  monitor_gym: True
+  tags:
+
+defaults:
+  - task: Volleyball3v3_hier
+  - algo: mappo_hier
+  - _self_
