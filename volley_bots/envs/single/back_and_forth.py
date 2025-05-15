@@ -123,9 +123,7 @@ def draw_court(W: float, L: float, H_NET: float, W_NET: float):
 
 def calculate_penalty_drone_abs_z(drone_rpos: torch.Tensor) -> torch.Tensor:
 
-    # 获取无人机在z轴上的绝对值
     drone_rpos_z = drone_rpos[:, :, 2].abs()
-    # 计算惩罚值：根据z方向上相对偏移量
     tmp = 1 / (drone_rpos_z - 0.1).clamp(min=0.1, max=0.7) - 1 / 0.7
 
     return tmp * 0.15
@@ -154,7 +152,7 @@ def attach_payload(parent_path):
     joint.GetAttribute("drive:linear:physics:stiffness").Set(10000.0)
 
 
-class TestVelReturn(IsaacEnv):
+class BackAndForth(IsaacEnv):
     def __init__(self, cfg, headless):
 
         self.L: float = cfg.task.court.L

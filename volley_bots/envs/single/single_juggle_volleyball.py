@@ -49,8 +49,10 @@ def _draw_net(
 ):
     n = 30
 
-    point_list_1 = [Float3(0, -W / 2, i * W_NET / n + H_NET - W_NET) for i in range(n)]
-    point_list_2 = [Float3(0, W / 2, i * W_NET / n + H_NET - W_NET) for i in range(n)]
+    point_list_1 = [Float3(0, -W / 2, i * W_NET / n + H_NET - W_NET)
+                    for i in range(n)]
+    point_list_2 = [Float3(0, W / 2, i * W_NET / n + H_NET - W_NET)
+                    for i in range(n)]
 
     point_list_1.append(Float3(0, W / 2, 0))
     point_list_1.append(Float3(0, -W / 2, 0))
@@ -158,7 +160,16 @@ def turn_to_obs(t: torch.Tensor):
         torch.Tensor: (n_env, 2, 2)
     """
     table = torch.tensor(
-        [[[1.0, 0.0], [1.0, 0.0]], [[0.0, 1.0], [0.0, 1.0]]],
+        [
+            [
+                [1.0, 0.0],
+                [1.0, 0.0]
+            ],
+            [
+                [0.0, 1.0],
+                [0.0, 1.0]
+            ]
+        ],
         device=t.device,
     )
     return table[t]
@@ -192,7 +203,6 @@ def turn_shift(t: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
 #     rwd = factor * torch.sqrt(r_height.clamp(min=0.0, max=5.0))
 #     return rwd
 
-
 def calculate_ball_height_reward(
     ball_pos: torch.Tensor, factor: float = 1.0
 ) -> torch.Tensor:
@@ -224,19 +234,15 @@ def calculate_penalty_anchor(
     Returns:
         torch.Tensor: (E,1) reward
     """
-    mask_before = turn == 0
-    mask_after = turn != 1
+    mask_before = (turn == 0)
+    mask_after = (turn != 1)
 
-    p = (dist_to_anchor > 1.0).float() * factor_active * mask_before.float() + (
-        dist_to_anchor > 0.5
-    ).float() * factor_inactive * mask_after.float()
+    p = (dist_to_anchor > 1.0).float() * factor_active * mask_before.float() + (dist_to_anchor > 0.5).float() * factor_inactive * mask_after.float()
 
     return p
 
 
-def get_hit_reward_mask(
-    turn: torch.Tensor, is_first_touch: torch.Tensor
-) -> torch.Tensor:
+def get_hit_reward_mask(turn: torch.Tensor, is_first_touch: torch.Tensor) -> torch.Tensor:
     """_summary_
 
     Args:
@@ -282,9 +288,7 @@ def calculate_reward_rpos(turn: torch.Tensor, rpos_ball: torch.Tensor) -> torch.
     Returns:
         torch.Tensor: (E,2)
     """
-    r = turn_to_reward(turn) / (
-        1 + torch.norm(rpos_ball[..., :2], p=2, dim=-1)
-    )  # (E,2)
+    r = turn_to_reward(turn) / (1 + torch.norm(rpos_ball[..., :2], p=2, dim=-1))  # (E,2)
     return r
 
 
@@ -308,16 +312,14 @@ class SingleJuggleVolleyball(IsaacEnv):
     def __init__(self, cfg, headless):
         self.L: float = cfg.task.court.L
         self.W: float = cfg.task.court.W
-        self.H_NET: float = cfg.task.court.H_NET  # height of the net
-        self.W_NET: float = (
-            cfg.task.court.W_NET
-        )  # not width of the net, but the width of the net's frame
+        self.H_NET: float = cfg.task.court.H_NET # height of the net
+        self.W_NET: float = cfg.task.court.W_NET # not width of the net, but the width of the net's frame
         self.ball_mass: float = cfg.task.ball_mass
         self.ball_radius: float = cfg.task.ball_radius
         self.min_height: float = cfg.task.min_height
         self.throttles_in_obs = cfg.task.throttles_in_obs
-        self.use_ctbr = True if cfg.task.action_transform == "PIDrate" else False
-
+        self.use_ctbr = True if cfg.task.action_transform=="PIDrate" else False
+        self.reward_shaping = cfg.task.reward_shaping
         super().__init__(cfg, headless)
 
         # x, y, z boundary for drone
@@ -328,20 +330,16 @@ class SingleJuggleVolleyball(IsaacEnv):
 
         # env paras
         self.time_encoding = self.cfg.task.time_encoding
-        self.central_env_pos = Float3(
-            *self.envs_positions[self.central_env_idx].tolist()
-        )
-
+        self.central_env_pos = Float3(*self.envs_positions[self.central_env_idx].tolist())
+        
         # drone paras
         self.drone.initialize()
         randomization = self.cfg.task.get("randomization", None)
         if randomization and "drone" in randomization:
-            self.drone.setup_randomization(self.cfg.task.randomization["drone"])
+                self.drone.setup_randomization(self.cfg.task.randomization["drone"])
         # contact sensor
         contact_sensor_cfg = ContactSensorCfg(prim_path="/World/envs/env_.*/ball")
-        self.contact_sensor: ContactSensor = contact_sensor_cfg.class_type(
-            contact_sensor_cfg
-        )
+        self.contact_sensor: ContactSensor = contact_sensor_cfg.class_type(contact_sensor_cfg)
         self.contact_sensor._initialize_impl()
 
         # ball paras
@@ -359,10 +357,8 @@ class SingleJuggleVolleyball(IsaacEnv):
         # self.target = torch.tensor(cfg.task.target, device=self.device)
         # (1,3) drones' initial positions with offsets
         self.init_drone_pos_dist = D.Uniform(
-            torch.tensor(cfg.task.init_drone_pos_dist.low, device=self.device)
-            + self.anchor,
-            torch.tensor(cfg.task.init_drone_pos_dist.high, device=self.device)
-            + self.anchor,
+            torch.tensor(cfg.task.init_drone_pos_dist.low, device=self.device) + self.anchor,
+            torch.tensor(cfg.task.init_drone_pos_dist.high, device=self.device) + self.anchor,
         )
         self.init_drone_rpy_dist = D.Uniform(
             torch.tensor([-0.1, -0.1, 0.0], device=self.device) * torch.pi,
@@ -372,9 +368,7 @@ class SingleJuggleVolleyball(IsaacEnv):
 
         # utils
         # self.turn = torch.zeros(self.num_envs, device=self.device, dtype=torch.int64)
-        self.last_hit_t = torch.zeros(
-            self.num_envs, 1, device=self.device, dtype=torch.int64
-        )
+        self.last_hit_t = torch.zeros(self.num_envs, 1, device=self.device, dtype=torch.int64)
         self.draw = _debug_draw.acquire_debug_draw_interface()
         self.ball_traj_vis = []
         # one-hot id [E,2,2]
@@ -454,9 +448,7 @@ class SingleJuggleVolleyball(IsaacEnv):
 
     def _set_specs(self):
         drone_state_dim = self.drone.state_spec.shape[-1]
-        observation_dim = (
-            drone_state_dim + 3 + 3 + 3
-        )  # specified in function _compute_state_and_obs
+        observation_dim = drone_state_dim + 3 + 3 + 3 # specified in function _compute_state_and_obs
 
         if not self.throttles_in_obs:
             observation_dim -= 4
@@ -471,7 +463,7 @@ class SingleJuggleVolleyball(IsaacEnv):
                     "agents": CompositeSpec(
                         {
                             "observation": UnboundedContinuousTensorSpec(
-                                (1, observation_dim)  # 2 drones
+                                (1, observation_dim) # 2 drones
                             ),
                         }
                     )
@@ -549,6 +541,7 @@ class SingleJuggleVolleyball(IsaacEnv):
                 "truncated": UnboundedContinuousTensorSpec(1),
                 "num_hits": UnboundedContinuousTensorSpec(1),
                 "num_true_hits": UnboundedContinuousTensorSpec(1),
+                "num_height_hits": UnboundedContinuousTensorSpec(1),
                 # "num_hits_is_close": UnboundedContinuousTensorSpec(1),
                 "hit_x": UnboundedContinuousTensorSpec(1),
                 "hit_y": UnboundedContinuousTensorSpec(1),
@@ -572,17 +565,13 @@ class SingleJuggleVolleyball(IsaacEnv):
             _stats_spec.set("done_ball_misbehave", UnboundedContinuousTensorSpec(1))
 
         if self.stats_cfg.get("done_drone_out_of_boundary", False):
-            _stats_spec.set(
-                "done_drone_out_of_boundary", UnboundedContinuousTensorSpec(1)
-            )
+            _stats_spec.set("done_drone_out_of_boundary", UnboundedContinuousTensorSpec(1))
 
         if self.stats_cfg.get("done_drone_too_low", False):
             _stats_spec.set("done_drone_too_low", UnboundedContinuousTensorSpec(1))
 
         if self.stats_cfg.get("done_drone_too_close_to_net", False):
-            _stats_spec.set(
-                "done_drone_too_close_to_net", UnboundedContinuousTensorSpec(1)
-            )
+            _stats_spec.set("done_drone_too_close_to_net", UnboundedContinuousTensorSpec(1))
 
         if self.stats_cfg.get("done_ball_too_low", False):
             _stats_spec.set("done_ball_too_low", UnboundedContinuousTensorSpec(1))
@@ -591,15 +580,15 @@ class SingleJuggleVolleyball(IsaacEnv):
             _stats_spec.set("done_ball_too_high", UnboundedContinuousTensorSpec(1))
 
         if self.stats_cfg.get("done_ball_out_of_boundary", False):
-            _stats_spec.set(
-                "done_ball_out_of_boundary", UnboundedContinuousTensorSpec(1)
-            )
+            _stats_spec.set("done_ball_out_of_boundary", UnboundedContinuousTensorSpec(1))
 
         if self.stats_cfg.get("reward", False):
             # _stats_spec.set("reward_rpos", UnboundedContinuousTensorSpec(1))
             _stats_spec.set("penalty_anchor", UnboundedContinuousTensorSpec(1))
             _stats_spec.set("reward_ball_height", UnboundedContinuousTensorSpec(1))
             _stats_spec.set("reward_success_hit", UnboundedContinuousTensorSpec(1))
+            _stats_spec.set("reward_height", UnboundedContinuousTensorSpec(1))
+            _stats_spec.set("reward_pos", UnboundedContinuousTensorSpec(1))
             # _stats_spec.set("reward_score", UnboundedContinuousTensorSpec(1))
             # _stats_spec.set("angular_penalty", UnboundedContinuousTensorSpec(1))
             _stats_spec.set("penalty_wrong_hit", UnboundedContinuousTensorSpec(1))
@@ -607,68 +596,47 @@ class SingleJuggleVolleyball(IsaacEnv):
             _stats_spec.set("penalty_drone_misbehave", UnboundedContinuousTensorSpec(1))
             _stats_spec.set("penalty_ball_misbehave", UnboundedContinuousTensorSpec(1))
             # _stats_spec.set("penalty_expected_ball_h", UnboundedContinuousTensorSpec(1))
-
+        if self.reward_shaping:
+            _stats_spec.set("shaping_reward", UnboundedContinuousTensorSpec(1))
         stats_spec = _stats_spec.expand(self.num_envs).to(self.device)
 
+
         if self.use_ctbr:
-            info_spec = (
-                CompositeSpec(
-                    {
-                        "drone_state": UnboundedContinuousTensorSpec(
-                            (self.drone.n, 13), device=self.device
-                        ),
-                        "prev_action": torch.stack(
-                            [self.drone.action_spec] * self.drone.n, 0
-                        ).to(self.device),
-                        "prev_prev_action": torch.stack(
-                            [self.drone.action_spec] * self.drone.n, 0
-                        ).to(self.device),
-                        "target_ctbr": UnboundedContinuousTensorSpec((self.drone.n, 4)),
-                        "real_unnormalized_ctbr": UnboundedContinuousTensorSpec(
-                            (self.drone.n, 4)
-                        ),
-                    }
-                )
-                .expand(self.num_envs)
-                .to(self.device)
-            )
+            info_spec = CompositeSpec({
+                "drone_state": UnboundedContinuousTensorSpec((self.drone.n, 13), device=self.device),
+                "prev_action": torch.stack([self.drone.action_spec] * self.drone.n, 0).to(self.device),
+                "prev_prev_action": torch.stack([self.drone.action_spec] * self.drone.n, 0).to(self.device),
+                "target_ctbr": UnboundedContinuousTensorSpec((self.drone.n, 4)),
+                "real_unnormalized_ctbr": UnboundedContinuousTensorSpec((self.drone.n, 4)),
+            }).expand(self.num_envs).to(self.device)
         else:
-            info_spec = (
-                CompositeSpec(
-                    {
-                        "drone_state": UnboundedContinuousTensorSpec(
-                            (self.drone.n, 13), device=self.device
-                        ),
-                    }
-                )
-                .expand(self.num_envs)
-                .to(self.device)
-            )
+            info_spec = CompositeSpec({
+                "drone_state": UnboundedContinuousTensorSpec((self.drone.n, 13), device=self.device),
+            }).expand(self.num_envs).to(self.device)
+
 
         self.observation_spec["stats"] = stats_spec
         self.observation_spec["info"] = info_spec
         self.stats = stats_spec.zero()
         self.info = info_spec.zero()
-
+    
     def debug_draw_region(self):
         b_x = self.env_boundary_x
         b_y = self.env_boundary_y
         b_z_top = self.env_boundary_z_top
         b_z_bot = self.env_boundary_z_bot
         height = b_z_top - b_z_bot
-        color = [(0.95, 0.43, 0.2, 1.0)]
+        color = [(0.95, 0.43, 0.2, 1.)]
         # [topleft, topright, botleft, botright]
-
-        points_start, points_end = rectangular_cuboid_edges(
-            2 * b_x, 2 * b_y, b_z_bot, height
-        )
+        
+        points_start, points_end = rectangular_cuboid_edges(2 * b_x, 2 * b_y, b_z_bot, height)
         points_start = [_carb_float3_add(p, self.central_env_pos) for p in points_start]
         points_end = [_carb_float3_add(p, self.central_env_pos) for p in points_end]
-
+        
         colors_line = color * len(points_start)
-        sizes_line = [1.0] * len(points_start)
+        sizes_line = [1.] * len(points_start)
         self.draw.draw_lines(points_start, points_end, colors_line, sizes_line)
-
+    
     # def debug_draw_turn(self):
     #     turn = self.turn[self.central_env_idx]
     #     ori = self.envs_positions[self.central_env_idx].detach()
@@ -681,60 +649,42 @@ class SingleJuggleVolleyball(IsaacEnv):
     #         colors = colors[::-1]
     #     # self.draw.clear_points()
     #     self.draw.draw_points(points, colors, sizes)
-
+    
     def _reset_idx(self, env_ids: torch.Tensor):
         # drone
         self.drone._reset_idx(env_ids, self.training)
         drone_pos = self.init_drone_pos_dist.sample((*env_ids.shape, 1))
         drone_rpy = self.init_drone_rpy_dist.sample((*env_ids.shape, 1))
         drone_rot = euler_to_quaternion(drone_rpy)
-        self.drone.set_world_poses(
-            drone_pos + self.envs_positions[env_ids].unsqueeze(1), drone_rot, env_ids
-        )
-        self.drone.set_velocities(
-            torch.zeros(len(env_ids), 1, 6, device=self.device), env_ids
-        )
+        self.drone.set_world_poses(drone_pos + self.envs_positions[env_ids].unsqueeze(1), drone_rot, env_ids)
+        self.drone.set_velocities(torch.zeros(len(env_ids), 1, 6, device=self.device), env_ids)
 
         # ball and turn
         # turn = torch.randint(0, 2, (len(env_ids),), device=self.device) # random initial turn
-        # turn = torch.zeros(len(env_ids), device=self.device, dtype=torch.int64)
+        # turn = torch.zeros(len(env_ids), device=self.device, dtype=torch.int64) 
         # self.turn[env_ids] = turn
 
         self.ball_z[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
         self.ball_z_max[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
-        self.ball_current_z_max[env_ids] = torch.zeros(
-            len(env_ids), 1, device=self.device
-        )
+        self.ball_current_z_max[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
 
         self.num_true_hits[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
         self.drone_pos[env_ids] = torch.zeros(len(env_ids), 3, device=self.device)
-        self.drone_dist_to_anchor[env_ids] = torch.zeros(
-            len(env_ids), 1, device=self.device
-        )
+        self.drone_dist_to_anchor[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
         # self.right_pos[env_ids] = torch.zeros(len(env_ids), 3, device=self.device)
         # self.right_dist_to_anchor[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
-
+        
         # self.num_left_hits[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
         self.hit_pos[env_ids] = torch.zeros(len(env_ids), 3, device=self.device)
-        self.hit_dist_to_anchor[env_ids] = torch.zeros(
-            len(env_ids), 1, device=self.device
-        )
+        self.hit_dist_to_anchor[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
         # self.num_right_hits[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
         # self.right_hit_pos[env_ids] = torch.zeros(len(env_ids), 3, device=self.device)
         # self.right_hit_dist_to_anchor[env_ids] = torch.zeros(len(env_ids), 1, device=self.device)
         # ball_pos = self.init_ball_pos_dist.sample((*env_ids.shape, 1))
-        ball_pos = (
-            drone_pos[torch.arange(len(env_ids)), 0, :] + self.init_ball_offset
-        )  # ball initial position is on the top of the drone
-        ball_rot = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device).repeat(
-            len(env_ids), 1
-        )
-        self.ball.set_world_poses(
-            ball_pos + self.envs_positions[env_ids], ball_rot, env_ids
-        )
-        self.ball.set_velocities(
-            torch.zeros(len(env_ids), 6, device=self.device), env_ids
-        )
+        ball_pos = drone_pos[torch.arange(len(env_ids)), 0, :] + self.init_ball_offset # ball initial position is on the top of the drone
+        ball_rot = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device).repeat(len(env_ids), 1)
+        self.ball.set_world_poses(ball_pos + self.envs_positions[env_ids], ball_rot, env_ids)
+        self.ball.set_velocities(torch.zeros(len(env_ids), 6, device=self.device), env_ids)
         # fix the mass now
         ball_masses = torch.ones_like(env_ids) * self.ball_mass
         self.ball.set_masses(ball_masses, env_ids)
@@ -750,21 +700,13 @@ class SingleJuggleVolleyball(IsaacEnv):
             # self.debug_draw_region()
             # self.debug_draw_turn()
 
-            point_list_1, point_list_2, colors, sizes = draw_court(
-                self.W, self.L, self.H_NET, self.W_NET
-            )
-            point_list_1 = [
-                _carb_float3_add(p, self.central_env_pos) for p in point_list_1
-            ]
-            point_list_2 = [
-                _carb_float3_add(p, self.central_env_pos) for p in point_list_2
-            ]
+            point_list_1, point_list_2, colors, sizes = draw_court(self.W, self.L, self.H_NET, self.W_NET)
+            point_list_1 = [_carb_float3_add(p, self.central_env_pos) for p in point_list_1]
+            point_list_2 = [_carb_float3_add(p, self.central_env_pos) for p in point_list_2]
             self.draw.draw_lines(point_list_1, point_list_2, colors, sizes)
 
     def _pre_sim_step(self, tensordict: TensorDictBase):
-        actions = tensordict[
-            ("agents", "action")
-        ].clone()  # For rotor command actions, not the actions output by the policy.
+        actions = tensordict[("agents", "action")].clone() # For rotor command actions, not the actions output by the policy.
         self.effort = self.drone.apply_action(actions)
 
         if self.use_ctbr:
@@ -785,6 +727,7 @@ class SingleJuggleVolleyball(IsaacEnv):
         if self.cfg.task.get("tanh_action", False):
             actions = torch.tanh(actions)
 
+    
     def _post_sim_step(self, tensordict: TensorDictBase):
         self.contact_sensor.update(self.dt)
 
@@ -815,7 +758,7 @@ class SingleJuggleVolleyball(IsaacEnv):
         )
         if self.throttles_in_obs:
             obs = [
-                self.root_state,  # (E,1,23)
+                self.root_state, # (E,1,23)
                 rpos_anchor,  # (E,1,3)
                 # self.rpos_drone[..., :3],  # (E,2,3)
                 self.rpos_ball,  # (E,1,3)
@@ -825,12 +768,7 @@ class SingleJuggleVolleyball(IsaacEnv):
             ]
         else:
             obs = [
-                pos,
-                rot,
-                vel,
-                angular_vel,
-                heading,
-                up,
+                pos, rot, vel, angular_vel, heading, up,
                 rpos_anchor,  # (E,1,3)
                 # self.rpos_drone[..., :3],  # (E,2,3)
                 self.rpos_ball,  # (E,1,3)
@@ -856,25 +794,23 @@ class SingleJuggleVolleyball(IsaacEnv):
         #     self.ball_vel.expand(-1, 2, 3),  # (E,2,3)
         #     turn_to_obs(self.turn), # (E,2,2)
         #     self.id, # (E,2,2)
-        # ]
+        # ]        
         # [drone_num(2),
         # each_obs_dim: root_state(rpos_anchor)+rpos_drone(3)+rpos_ball(3)+ball_vel(3)+turn(1)]
 
         if self.time_encoding:
             t = (self.progress_buf / self.max_episode_length).reshape(-1, 1, 1)
             obs.append(t.expand(-1, 1, self.time_encoding_dim))
-
+        
         obs = torch.cat(obs, dim=-1)
-
+        
         if self._should_render(0):
             central_env_pos = self.envs_positions[self.central_env_idx]
-            ball_plot_pos = (
-                self.ball_pos[self.central_env_idx] + central_env_pos
-            ).tolist()  # [2, 3]
+            ball_plot_pos = (self.ball_pos[self.central_env_idx]+central_env_pos).tolist()  # [2, 3]
             if len(self.ball_traj_vis) > 1:
                 point_list_0 = self.ball_traj_vis[-1]
                 point_list_1 = ball_plot_pos
-                colors = [(0.1, 1.0, 0.1, 1.0)]
+                colors = [(.1, 1., .1, 1.)]
                 sizes = [1.5]
                 self.draw.draw_lines(point_list_0, point_list_1, colors, sizes)
             self.ball_traj_vis.append(ball_plot_pos)
@@ -891,39 +827,25 @@ class SingleJuggleVolleyball(IsaacEnv):
         )
 
     def _compute_reward_and_done(self):
-        drone_out_of_boundary = out_of_bounds(
-            self.drone.pos, self.env_boundary_x, self.env_boundary_y
-        )  # (E,1)
+        drone_out_of_boundary = out_of_bounds(self.drone.pos, self.env_boundary_x, self.env_boundary_y)  # (E,1)
         drone_too_low = self.drone.pos[..., 2] < 0.4
         drone_too_high = self.drone.pos[..., 2] > 2.5
         drone_too_close_to_net = self.drone.pos[..., 0].abs() < 0.01  # (E,1)
-        drone_misbehave = (
-            drone_too_low | drone_too_high | drone_too_close_to_net
-        )  # (E,1)
+        drone_misbehave = drone_too_low | drone_too_high | drone_too_close_to_net # (E,1)
 
         if self.stats_cfg.get("done_drone_too_close_to_net", False):
-            self.stats["done_drone_too_close_to_net"] = drone_too_close_to_net.any(
-                -1, keepdim=True
-            ).float()
+            self.stats["done_drone_too_close_to_net"] = drone_too_close_to_net.any(-1, keepdim=True).float()
         if self.stats_cfg.get("done_drone_out_of_boundary", False):
-            self.stats["done_drone_out_of_boundary"] = drone_out_of_boundary.any(
-                -1, keepdim=True
-            ).float()
+            self.stats["done_drone_out_of_boundary"] = drone_out_of_boundary.any(-1, keepdim=True).float()
         if self.stats_cfg.get("done_drone_too_low", False):
-            self.stats["done_drone_too_low"] = drone_too_low.any(
-                -1, keepdim=True
-            ).float()
+            self.stats["done_drone_too_low"] = drone_too_low.any(-1, keepdim=True).float()
         if self.stats_cfg.get("done_drone_misbehave", False):
-            self.stats["done_drone_misbehave"] = drone_misbehave.any(
-                -1, keepdim=True
-            ).float()
+            self.stats["done_drone_misbehave"] = drone_misbehave.any(-1, keepdim=True).float()
 
         ball_too_low = self.ball_pos[..., 2] < 0.15  # (E,1)
-        ball_too_high = self.ball_pos[..., 2] > 16  # (E,1)
-        ball_out_of_boundary = out_of_bounds(
-            self.ball_pos, self.env_boundary_x, self.env_boundary_y
-        )  # (E,1)
-        ball_misbehave = ball_too_low | ball_too_high | ball_out_of_boundary  # (E,1)
+        ball_too_high = self.ball_pos[..., 2] > 4.5  # (E,1)
+        ball_out_of_boundary = out_of_bounds(self.ball_pos, self.env_boundary_x, self.env_boundary_y)  # (E,1)
+        ball_misbehave = ball_too_low | ball_too_high | ball_out_of_boundary # (E,1)
 
         if self.stats_cfg.get("done_ball_too_low", False):
             self.stats["done_ball_too_low"] = ball_too_low.float()
@@ -936,51 +858,42 @@ class SingleJuggleVolleyball(IsaacEnv):
 
         self.ball_z += self.ball_pos[..., 2]
         self.drone_pos += self.drone.pos[:, 0]
-        self.drone_dist_to_anchor += torch.norm(
-            self.drone.pos[:, 0] - self.anchor, p=2, dim=-1, keepdim=True
-        )
+        self.drone_dist_to_anchor += torch.norm(self.drone.pos[:, 0] - self.anchor, p=2, dim=-1, keepdim=True)
         # self.right_pos += self.drone.pos[:, 1]
         # self.right_dist_to_anchor += torch.norm(self.drone.pos[:, 1] - self.anchor[1], p=2, dim=-1, keepdim=True)
 
         # ball_contact_forces = self.ball.get_net_contact_forces() # (E,1,3)
-        ball_contact_forces = self.contact_sensor.data.net_forces_w  # (E,1,3)
+        ball_contact_forces = self.contact_sensor.data.net_forces_w # (E,1,3)
 
-        # which_drone: torch.Tensor = self.rpos_ball.norm(p=2, dim=-1).argmin(dim=1, keepdim=True)  # (E,1) which drone is closer to the ball
+        # which_drone: torch.Tensor = self.rpos_ball.norm(p=2, dim=-1).argmin(dim=1, keepdim=True)  # (E,1) which drone is closer to the ball        
 
         # is_close = self.rpos_ball[torch.arange(self.num_envs, device=which_drone.device), which_drone.squeeze(-1)].norm(dim=-1, keepdim=True) < 0.3 # (E,1)
 
         hit = ball_contact_forces.any(-1)  # (E,1)
 
-        # hit_is_close = hit & is_close  # (E,1) 击球且距离球较近
+        # hit_is_close = hit & is_close  # (E,1) 击球且距离球较近 
 
-        true_hit_step_gap = 25  # 25 * 0.016s = 0.4s
-        true_hit = hit & (
-            (self.progress_buf.unsqueeze(-1) - self.last_hit_t) > true_hit_step_gap
-        )  # (E,1) 击球时间大于30个step才是正确的一次击球
-        wrong_hit_step_gap = 25  # 25 * 0.016s = 0.4s
-        wrong_hit = hit & (
-            (self.progress_buf.unsqueeze(-1) - self.last_hit_t) <= wrong_hit_step_gap
-        )  # (E,1) 击球时间小于30个step则为错误击球
+        true_hit_step_gap = 25 # 25 * 0.016s = 0.4s
+        true_hit = hit & ((self.progress_buf.unsqueeze(-1) - self.last_hit_t) > true_hit_step_gap) # (E,1) 击球时间大于30个step才是正确的一次击球
+        wrong_hit_step_gap = 25 # 25 * 0.016s = 0.4s
+        wrong_hit = hit & ((self.progress_buf.unsqueeze(-1) - self.last_hit_t) <= wrong_hit_step_gap) # (E,1) 击球时间小于30个step则为错误击球
 
         self.num_true_hits += true_hit
-        self.ball_current_z_max = torch.max(
-            self.ball_current_z_max, self.ball_pos[..., 2]
-        )
+        self.ball_current_z_max = torch.max(self.ball_current_z_max, self.ball_pos[..., 2])
         self.ball_z_max += (self.num_true_hits > 1) * true_hit * self.ball_current_z_max
+        true_hit_height = (self.ball_current_z_max > self.min_height) & true_hit & (self.num_true_hits > 1)
         self.ball_current_z_max = torch.logical_not(true_hit) * self.ball_current_z_max
 
         # left_hit = true_hit & (self.turn.unsqueeze(-1) == 0)
         self.hit_pos += true_hit * self.drone.pos[:, 0]
-        self.hit_dist_to_anchor += true_hit * torch.norm(
-            self.drone.pos[:, 0] - self.anchor, p=2, dim=-1, keepdim=True
-        )
+        self.hit_dist_to_anchor += true_hit * torch.norm(self.drone.pos[:, 0] - self.anchor, p=2, dim=-1, keepdim=True)
 
         # right_hit = true_hit & (self.turn.unsqueeze(-1) == 1)
         # self.num_right_hits += right_hit
         # self.right_hit_pos += right_hit * self.drone.pos[:, 1]
         # self.right_hit_dist_to_anchor += right_hit * torch.norm(self.drone.pos[:, 1] - self.anchor[1], p=2, dim=-1, keepdim=True)
 
-        # # TODO: simplify
+        # # TODO: simplify 
         # new_drone_last_hit_t = torch.where(hit, self.progress_buf.unsqueeze(-1), drone_last_hit_t)  # (E,1) 更新drone_last_hit_t
         # new_last_hit_t = new_drone_last_hit_t * (which_drone == torch.arange(2, device=which_drone.device).unsqueeze(0)).long() # (E,2)
         # new_last_hit_t += self.last_hit_t * (which_drone != torch.arange(2, device=which_drone.device).unsqueeze(0)).long() # (E,2)
@@ -992,7 +905,7 @@ class SingleJuggleVolleyball(IsaacEnv):
         # wrong_hit_2: torch.Tensor = true_hit & (self.turn.unsqueeze(-1) != which_drone)  # (E,1) 在非该无人机击球回合，该无人机击球成功，则为错误击球
 
         # wrong_hit = wrong_hit_1 | wrong_hit_2  # (E,1) 错误击球
-
+        
         # if self._should_render(0) and switch_turn.any():
         #     self.debug_draw_turn()
 
@@ -1005,13 +918,11 @@ class SingleJuggleVolleyball(IsaacEnv):
 
         # reward_rpos = 0.03 * calculate_reward_rpos(self.turn, self.rpos_ball)  # (E,2) 有正有负：该回合无人机为正（离得远近值越大），非该回合无人机为负（离得越近值越小）
 
-        # not_turn_with_success = turn_to_mask((self.turn + 1) % 2) & (self.stats["num_turns"] > 0) # (E,2)
+        # not_turn_with_success = turn_to_mask((self.turn + 1) % 2) & (self.stats["num_turns"] > 0) # (E,2) 
         # reward_ball_height = 0.01 * calculate_ball_height_reward(self.ball_pos) * not_turn_with_success.float() # (E,2) 如果有成功打过去过，则：该回合无人机奖励为0，非该回合无人机为正，让打过去的球高度越高越好（有最大值限制）
         # reward_ball_height = 0.01 * calculate_ball_height_reward(self.ball_pos[..., 2] - self.anchor[:, 0, 2]) * not_turn_with_success.float() # (E,2) 如果有成功打过去过，则：该回合无人机奖励为0，非该回合无人机为正，让打过去的球高度越高越好（有最大值限制）
 
-        dist_to_anchor: torch.Tensor = torch.norm(
-            self.drone.pos - self.anchor, p=2, dim=-1
-        )  # (E,1)
+        dist_to_anchor: torch.Tensor = torch.norm(self.drone.pos - self.anchor, p=2, dim=-1)  # (E,1)
         # penalty_anchor = (calculate_penalty_anchor(dist_to_anchor) * 0.03)  # (E,1) 击球前无人机离其anchor距离大于1有惩罚，击球后无人机离其anchor距离大于0.5有惩罚
 
         penalty_anchor = (dist_to_anchor > 1.0).float() * 0.4
@@ -1055,73 +966,58 @@ class SingleJuggleVolleyball(IsaacEnv):
 
         # step_reward = reward_rpos + reward_ball_height - penalty_drone_abs_y - penalty_anchor
         # step_reward = reward_rpos + reward_ball_height - penalty_anchor
-        above_min_height_reward = (
-            self.ball_z_max / (self.num_true_hits - 1).clamp(min=1e-5)
-        ) > self.min_height
-        reward_ball_height = 3 * (true_hit & above_min_height_reward).float()  # (E, 1)
+        above_min_height_reward = (self.ball_z_max / (self.num_true_hits - 1).clamp(min=1e-5)) > self.min_height
+        # reward_ball_height = 8 * (true_hit & above_min_height_reward).float()  # (E, 1)
+        reward_ball_height = 8 * (true_hit & above_min_height_reward).float()  # (E, 1)
         # print("reward_ball_height", reward_ball_height)
-        reward_success_hit = true_hit.any(-1, keepdim=True).float()  # (E, 1)
+        reward_success_hit = 2 * true_hit.any(-1, keepdim=True).float()  # (E, 1)
         # print("reward_success_hit", reward_success_hit)
-        step_reward = reward_ball_height + reward_success_hit - penalty_anchor
+        # step_reward = reward_ball_height + reward_success_hit - penalty_anchor
         # conditional_reward = reward_score - angular_penalty
-        end_penalty = (
-            -penalty_wrong_hit - penalty_drone_misbehave - penalty_ball_misbehave
-        )
-
-        # reward: torch.Tensor = step_reward + conditional_reward + end_penalty  # (E,2)
-        reward: torch.Tensor = step_reward + end_penalty  # (E,2)
+        end_penalty = - penalty_wrong_hit - penalty_drone_misbehave - penalty_ball_misbehave
+        self.rpos =  self.ball_pos - self.drone.pos
+        reward_pos = 1 / (1 + torch.norm(self.rpos[..., :2], dim=-1))
+        reward_height = (self.ball_pos[..., 2] - self.drone.pos[..., 2].clip(1.0)).clip(0., 2.)
+        shaping_reward = reward_pos + 0.5 * reward_height
+        # reward: torch.Tensor = reward_ball_height + reward_success_hit + shaping_reward + end_penalty
+        if self.reward_shaping:
+            reward: torch.Tensor = reward_ball_height + reward_success_hit + shaping_reward + end_penalty
+        else:
+            reward: torch.Tensor = reward_ball_height + reward_success_hit + end_penalty
 
         if self.stats_cfg.get("reward", False):
             # self.stats["reward_rpos"].add_(reward_rpos.abs().mean(dim=-1, keepdim=True))
             self.stats["penalty_anchor"].add_(penalty_anchor.mean(dim=-1, keepdim=True))
-            self.stats["reward_ball_height"].add_(
-                reward_ball_height.mean(dim=-1, keepdim=True)
-            )
-            self.stats["reward_success_hit"].add_(
-                reward_success_hit.mean(dim=-1, keepdim=True)
-            )
+            self.stats["reward_ball_height"].add_(reward_ball_height.mean(dim=-1, keepdim=True))
+            self.stats["reward_success_hit"].add_(reward_success_hit.mean(dim=-1, keepdim=True))
+            self.stats["reward_height"].add_(reward_height.mean(dim=-1, keepdim=True))
+            self.stats["reward_pos"].add_(reward_pos.mean(dim=-1, keepdim=True))
             # self.stats["reward_score"].add_(reward_score.mean(dim=-1, keepdim=True))
             # self.stats["angular_penalty"].add_(angular_penalty.mean(dim=-1, keepdim=True))
-            self.stats["penalty_wrong_hit"].add_(
-                penalty_wrong_hit.mean(dim=-1, keepdim=True)
-            )
+            self.stats["penalty_wrong_hit"].add_(penalty_wrong_hit.mean(dim=-1, keepdim=True))
             # self.stats["penalty_drone_abs_y"].add_(penalty_drone_abs_y.mean(dim=-1, keepdim=True))
-            self.stats["penalty_drone_misbehave"].add_(
-                penalty_drone_misbehave.mean(dim=-1, keepdim=True)
-            )
-            self.stats["penalty_ball_misbehave"].add_(
-                penalty_ball_misbehave.mean(dim=-1, keepdim=True)
-            )
+            self.stats["penalty_drone_misbehave"].add_(penalty_drone_misbehave.mean(dim=-1, keepdim=True))
+            self.stats["penalty_ball_misbehave"].add_(penalty_ball_misbehave.mean(dim=-1, keepdim=True))
+        if self.reward_shaping:
+            self.stats["shaping_reward"].add_(shaping_reward.mean(dim=-1, keepdim=True))
 
-        misbehave = drone_misbehave.any(-1, keepdim=True) | ball_misbehave  # [E, 1]
-        truncated = (self.progress_buf >= self.max_episode_length).unsqueeze(
-            -1
-        )  # [E, 1]
-        terminated = misbehave | wrong_hit  # [E, 1]
-        done: torch.Tensor = truncated | terminated  # [E, 1]
+        misbehave = drone_misbehave.any(-1, keepdim=True) | ball_misbehave # [E, 1]
+        truncated = (self.progress_buf >= self.max_episode_length).unsqueeze(-1) # [E, 1]
+        terminated = misbehave | wrong_hit # [E, 1]
+        done: torch.Tensor = truncated | terminated # [E, 1]
 
         self.stats["return"].add_(reward.mean(dim=-1, keepdim=True))
         self.stats["episode_len"] = self.progress_buf.unsqueeze(1)
         # self.stats["num_turns"].add_(switch_turn.float())
 
         self.stats["ball_z"] = self.ball_z / self.stats["episode_len"]
-        self.stats["ball_z_max"] = self.ball_z_max / (self.num_true_hits - 1).clamp(
-            min=1e-5
-        )
+        self.stats["ball_z_max"] = self.ball_z_max / (self.num_true_hits - 1).clamp(min=1e-5)
 
-        self.stats["drone_x"] = (
-            self.drone_pos[:, 0].unsqueeze(-1) / self.stats["episode_len"]
-        )
-        self.stats["drone_y"] = (
-            self.drone_pos[:, 1].unsqueeze(-1) / self.stats["episode_len"]
-        )
-        self.stats["drone_z"] = (
-            self.drone_pos[:, 2].unsqueeze(-1) / self.stats["episode_len"]
-        )
-        self.stats["drone_dist_to_anchor"] = (
-            self.drone_dist_to_anchor / self.stats["episode_len"]
-        )
-
+        self.stats["drone_x"] = self.drone_pos[:, 0].unsqueeze(-1) / self.stats["episode_len"]
+        self.stats["drone_y"] = self.drone_pos[:, 1].unsqueeze(-1) / self.stats["episode_len"]
+        self.stats["drone_z"] = self.drone_pos[:, 2].unsqueeze(-1) / self.stats["episode_len"]
+        self.stats["drone_dist_to_anchor"] = self.drone_dist_to_anchor / self.stats["episode_len"]
+        
         # self.stats["right_x"] = self.right_pos[:, 0].unsqueeze(-1) / self.stats["episode_len"]
         # self.stats["right_y"] = self.right_pos[:, 1].unsqueeze(-1) / self.stats["episode_len"]
         # self.stats["right_z"] = self.right_pos[:, 2].unsqueeze(-1) / self.stats["episode_len"]
@@ -1136,20 +1032,12 @@ class SingleJuggleVolleyball(IsaacEnv):
 
         self.stats["num_hits"].add_(hit.float())
         self.stats["num_true_hits"].add_(true_hit.float())
-
-        self.stats["hit_x"] = self.hit_pos[:, 0].unsqueeze(
-            -1
-        ) / self.num_true_hits.clamp(min=1e-5)
-        self.stats["hit_y"] = self.hit_pos[:, 1].unsqueeze(
-            -1
-        ) / self.num_true_hits.clamp(min=1e-5)
-        self.stats["hit_z"] = self.hit_pos[:, 2].unsqueeze(
-            -1
-        ) / self.num_true_hits.clamp(min=1e-5)
-        self.stats["hit_dist_to_anchor"] = (
-            self.hit_dist_to_anchor / self.num_true_hits.clamp(min=1e-5)
-        )
-
+        self.stats["num_height_hits"].add_(true_hit_height.float())
+        self.stats["hit_x"] = self.hit_pos[:, 0].unsqueeze(-1) / self.num_true_hits.clamp(min=1e-5)
+        self.stats["hit_y"] = self.hit_pos[:, 1].unsqueeze(-1) / self.num_true_hits.clamp(min=1e-5)
+        self.stats["hit_z"] = self.hit_pos[:, 2].unsqueeze(-1) / self.num_true_hits.clamp(min=1e-5)
+        self.stats["hit_dist_to_anchor"] = self.hit_dist_to_anchor / self.num_true_hits.clamp(min=1e-5)
+        
         # self.stats["right_hit_x"] = self.right_hit_pos[:, 0].unsqueeze(-1) / (self.num_right_hits + 1e-5)
         # self.stats["right_hit_y"] = self.right_hit_pos[:, 1].unsqueeze(-1) / (self.num_right_hits + 1e-5)
         # self.stats["right_hit_z"] = self.right_hit_pos[:, 2].unsqueeze(-1) / (self.num_right_hits + 1e-5)
@@ -1168,7 +1056,7 @@ class SingleJuggleVolleyball(IsaacEnv):
                 "agents": {"reward": reward.unsqueeze(-1)},
                 "done": done,
                 "terminated": terminated,
-                "truncated": truncated,
+                "truncated": truncated
             },
             self.num_envs,
         )

@@ -12,7 +12,7 @@ anchor: [4.5, 0, 2.0]
 init_drone_pos_dist: # relative to anchor
   low: [-0.5, -0.5, -0.2]
   high: [0.5, 0.5, 0.2]
-ball_offset: [0.0, 0.0, 2.0]
+ball_offset: [0.0, 0.0, 3.0]
 tanh_action: False
 
 court:

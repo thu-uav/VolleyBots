@@ -16,10 +16,9 @@ CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
     eval_interval=50 \
     save_interval=500 \
     algo=${algorithm} \
-    algo.share_actor=${share_actor}  \
     task.time_encoding=false \
     task.action_transform=${action_transform}\
     task.throttles_in_obs=${throttles_in_obs}\
     seed=${seed} \
-    wandb.project=${wandb_project} \
-    # wandb.mode=disabled \
+    wandb.mode=disabled \
+    # wandb.project=${wandb_project} \
