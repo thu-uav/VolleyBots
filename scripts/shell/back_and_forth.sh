@@ -1,6 +1,4 @@
-export PYTHONPATH=/home/yixiangmin/VolleyBots:$PYTHONPATH
 total_frames=500_000_000
-share_actor=true    # true, false
 algorithm="mappo"  # mappo, maddpg, td3, sac, dqn
 action_transform=""  # PIDrate, null
 throttles_in_obs=true # true, false
