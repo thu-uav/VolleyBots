@@ -167,10 +167,10 @@ Note that:
 
 Install VolleyBots in the container:
 ```bash
-conda activate volley3
+conda activate volley
 cd /root/VolleyBots
 cp -r conda_setup/etc $CONDA_PREFIX
-conda activate volley3 # re-activate the environment
+conda activate volley # re-activate the environment
 pip install -e . # install VolleyBots
 ```
 
