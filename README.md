@@ -8,21 +8,26 @@
 
 ![](figures/tasks.png)
 
-Zelai Xu, Chao Yu+, Ruize Zhang, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi Wang, Wenhao Tang, Yu Wang+
+Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi Wang, Wenhao Tang, Feng Gao, Wenbo Ding, Xinlei Chen, Yu Wang+
 
 (Corresponding Authors: {yuchao,yu-wang}@tsinghua.edu.cn)
 
-[**Overview**](#overview) | [**Installation**](#installation) | [**Usage**](#usage) | [**Citation**](#citation) | [**Acknowledgement**](#ackowledgement)
+**Contents**
+
+- [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Citation](#citation)
+- [Acknowledgement](#ackowledgement)
 
 ## Overview
 
 ![](figures/overview.png)
 
-**Overview of the VolleyBots Testbed**. VolleyBots comprises four key components: 
+**Overview of the VolleyBots Testbed**. VolleyBots comprises three key components: 
 (1) Environment, supported by Isaac Sim and PyTorch, which defines entities, observations, actions, and reward functions; 
-(2) Tasks, including 3 single-agent tasks, 3 multi-agent cooperative tasks and 2 multi-agent competitive tasks; 
-(3) Algorithms, encompassing RL, MARL, game-theoretic algorithms; and 
-(4) Sim-to-Real Transfer, enabling zero-shot deployment from simulation to real-world environments.
+(2) Tasks, including 3 single-agent tasks, 3 multi-agent cooperative tasks and 3 multi-agent competitive tasks; and
+(3) Algorithms, encompassing RL, MARL, game-theoretic algorithms.
 
 ## Installation
 
@@ -58,13 +63,13 @@ source ~/.bashrc
 Although Isaac Sim comes with a built-in Python environment, we recommend using a seperate conda environment which is more flexible. We provide scripts to automate environment setup when activating/deactivating a conda environment at ``VolleyBots/conda_setup``.
 
 ```bash
-conda create -n sim2 python=3.10
-conda activate sim2
+conda create -n volley python=3.10
+conda activate volley
 
 # at VolleyBots/
 cp -r conda_setup/etc $CONDA_PREFIX
 # re-activate the environment
-conda activate sim2
+conda activate volley
 # install VolleyBots
 pip install -e .
 
@@ -162,10 +167,10 @@ Note that:
 
 Install VolleyBots in the container:
 ```bash
-conda activate sim23
+conda activate volley3
 cd /root/VolleyBots
 cp -r conda_setup/etc $CONDA_PREFIX
-conda activate sim23 # re-activate the environment
+conda activate volley3 # re-activate the environment
 pip install -e . # install VolleyBots
 ```
 
@@ -253,9 +258,9 @@ If you want to use your own configurations, simply pass the customized configura
 Please cite [our paper](https://arxiv.org/abs/2502.01932) if you find our work useful:
 
 ```bibtex
-@misc{xu2025volleybots,
+@misc{xu2025volleybotstestbedmultidronevolleyball,
       title={VolleyBots: A Testbed for Multi-Drone Volleyball Game Combining Motion Control and Strategic Play}, 
-      author={Zelai Xu and Chao Yu and Ruize Zhang and Huining Yuan and Xiangmin Yi and Shilong Ji and Chuqi Wang and Wenhao Tang and Yu Wang},
+      author={Zelai Xu and Ruize Zhang and Chao Yu and Huining Yuan and Xiangmin Yi and Shilong Ji and Chuqi Wang and Wenhao Tang and Feng Gao and Wenbo Ding and Xinlei Chen and Yu Wang},
       year={2025},
       eprint={2502.01932},
       archivePrefix={arXiv},
