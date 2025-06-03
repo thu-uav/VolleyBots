@@ -15,7 +15,7 @@ This repository is the official implementation of the paper "VolleyBots: A Testb
 
 Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi Wang, Wenhao Tang, Feng Gao, Wenbo Ding, Xinlei Chen, Yu Wang+
 
-[Overview](#overview) | [Installation](#installation) | [Usage](#usage) | [Checkpoints](#checkpoints) | [Experimental Setup](#experimental-setup) | [Citation](#citation) | [Acknowledgement](#ackowledgement)
+[Overview](#-overview) | [Installation](#-installation) | [Usage](#-usage) | [Checkpoints](#-checkpoints) | [Experimental Setup](#-experimental-setup) | [Citation](#-citation) | [Acknowledgement](#-acknowledgement)
 
 ## 📌 Overview
 
@@ -309,7 +309,7 @@ Please cite [our paper](https://arxiv.org/abs/2502.01932) if you find our work u
 }
 ```
 
-## 🙏 Ackowledgement
+## 🙏 Acknowledgement
 
 This repository is heavily based on [OmniDrones](https://github.com/btx0424/OmniDrones).
 
