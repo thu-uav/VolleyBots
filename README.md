@@ -1,29 +1,23 @@
-# VolleyBots: A Testbed for Multi-Drone Volleyball Game Combining Motion Control and Strategic Play
+# 🏐 VolleyBots: A Testbed for Multi-Drone Volleyball Game Combining Motion Control and Strategic Play
 
-[![arXiv](https://img.shields.io/badge/arXiv-2502.01932-red.svg)](http://arxiv.org/abs/2502.01932)
-[![Website](https://img.shields.io/badge/Website-VolleyBots-green.svg)](https://sites.google.com/view/thu-volleybots/home)
 [![IsaacSim](https://img.shields.io/badge/Isaac%20Sim-2023.1.0.hotfix.1-orange.svg)](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html)
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://docs.python.org/3/whatsnew/3.10.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.1.0-purple.svg)](https://github.com/thu-uav/VolleyBots)
+[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/thu-uav/VolleyBots)
+
+This repository is the official implementation of the paper "VolleyBots: A Testbed for Multi-Drone Volleyball Game Combining Motion Control and Strategic Play".
+
+<p align="center">
+[ <a href="https://arxiv.org/pdf/2502.01932"><b>Paper</b></a> ] [ <a href="https://sites.google.com/view/thu-volleybots"><b>Project Website</b></a> ]
+</p>
 
 ![](figures/tasks.png)
 
 Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi Wang, Wenhao Tang, Feng Gao, Wenbo Ding, Xinlei Chen, Yu Wang+
 
-(Corresponding Authors: {yuchao,yu-wang}@tsinghua.edu.cn)
+[Overview](#overview) | [Installation](#installation) | [Usage](#usage) | [Checkpoints](#checkpoints) |[Experimental Setup](#experimental-setup) | [Citation](#citation) | [Acknowledgement](#ackowledgement)
 
-**Contents**
-
-- [Overview](#overview)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Pre-trained Models](#pre-trained-models)
-- [Experimental Setup](#experimental-setup)
-- [Citation](#citation)
-- [Acknowledgement](#ackowledgement)
-
-## Overview
+## 📌 Overview
 
 ![](figures/overview.png)
 
@@ -32,7 +26,7 @@ Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi 
 (2) Tasks, including 3 single-agent tasks, 3 multi-agent cooperative tasks and 3 multi-agent competitive tasks; and
 (3) Algorithms, encompassing RL, MARL, game-theoretic algorithms.
 
-## Installation
+## ⚙️ Installation
 
 We use **Isaac Sim** as the simulation environment. You can choose to install the local version or the container version.
 
@@ -209,7 +203,7 @@ python train.py headless=true wandb.mode=disabled total_frames=50000 task=Single
 ```
 
     
-## Usage
+## 🚀 Usage
 
 <!-- TODO -->
 ### 1. Configuration
@@ -287,10 +281,10 @@ We include the example evaluation scripts from our paper in the `scripts/evaluti
 bash volleyball3v3_crossplay.sh
 ```
 
-## Pre-trained Models
+## 🤖 Checkpoints
 We offers trained checkpoints at ``VolleyBots/checkpoints`` directory for evaluating exploitability and cross-play win rates, and we also include hierarchical policy checkpoints for competing against the self-play baseline in the 3 vs 3 task.
 
-## Experimental Setup
+## 💻 Experimental Setup
 
 Our experiments were run on a workstation with:
 
@@ -299,7 +293,7 @@ Our experiments were run on a workstation with:
 * **OS**: Ubuntu 20.04 LTS
 * **Software**: CUDA 12.4
 
-## Citation
+## 📚 Citation
 
 Please cite [our paper](https://arxiv.org/abs/2502.01932) if you find our work useful:
 
@@ -315,7 +309,7 @@ Please cite [our paper](https://arxiv.org/abs/2502.01932) if you find our work u
 }
 ```
 
-## Ackowledgement
+## 🙏 Ackowledgement
 
 This repository is heavily based on [OmniDrones](https://github.com/btx0424/OmniDrones).
 
