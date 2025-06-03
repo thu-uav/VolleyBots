@@ -12,8 +12,8 @@ CUDA_VISIBLE_DEVICES=0 python ../train_psro.py headless=true \
     mean_threshold=0.90 \
     init_by_latest_strategy=True \
     max_population_size=10 \
-    # wandb.mode=disabled # debug
-    # only_eval=true \
+    wandb.mode=disabled # debug
+    # solver_type: fsp, nash
     
     
     

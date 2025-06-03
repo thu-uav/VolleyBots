@@ -257,13 +257,6 @@ def main(cfg: DictConfig):
     base_env = env_class(cfg, headless=cfg.headless)
 
     def log(info):
-        if cfg.wandb.get("mode", "disabled") != "online":
-            tmp = {
-                k: v
-                for k, v in info.items()
-                if k in ("train/stats.actor_0_wins", "train/stats.actor_1_wins")
-            }
-            print(OmegaConf.to_yaml(tmp))
         run.log(info)
 
     transforms = get_transforms(cfg, base_env, log)

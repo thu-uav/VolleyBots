@@ -13,4 +13,4 @@ CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
     algo.share_actor=true \
     algo.critic_input="obs" \
     seed=0 \
-    # wandb.mode=disabled # debug
+    wandb.mode=disabled # debug

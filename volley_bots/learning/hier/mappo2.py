@@ -1,26 +1,3 @@
-# MIT License
-#
-# Copyright (c) 2023 Botian Xu, Tsinghua University
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-
 from numbers import Number
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -152,7 +129,7 @@ class MAPPOPolicy2(object):
             actors = nn.ModuleList(
                 [create_actor_fn() for _ in range(self.agent_spec.n)]
             ) 
-            # 创建一个 ModuleList，里面有n个actor，目的是初始化n个参数，结构实际上只用到actor[0]，加载不同的参数而已
+
             self.actor = actors[0]
             stacked_params = torch.stack([make_functional(actor) for actor in actors])
             self.actor_params = TensorDictParams(stacked_params.to_tensordict())
@@ -209,7 +186,7 @@ class MAPPOPolicy2(object):
                 out_keys=self.critic_out_keys,
             ).to(self.device)
             self.value_func = self.critic
-            # self.value_func = vmap(self.critic, in_dims=1, out_dims=1) # 忽略 agents 那维，最后再拼起来
+
 
         self.critic_opt = torch.optim.Adam(
             self.critic.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay
@@ -639,7 +616,7 @@ def make_critic(
     cfg, state_spec: TensorSpec, reward_spec: TensorSpec, centralized=False
 ):
     assert isinstance(reward_spec, (UnboundedTensorSpec, BoundedTensorSpec))
-    encoder = make_encoder(cfg, state_spec) # 根据最后一个维度进行MLP，前几个维度会自动flatten
+    encoder = make_encoder(cfg, state_spec)
 
     if cfg.get("rnn", None):
         rnn_cls = {"gru": GRU}[cfg.rnn.cls.lower()]

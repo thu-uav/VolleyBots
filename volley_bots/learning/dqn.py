@@ -1,26 +1,3 @@
-# MIT License
-# 
-# Copyright (c) 2023 Botian Xu, Tsinghua University
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -53,7 +30,7 @@ class DuelingQNetwork(nn.Module):
         self.advantage_head = nn.Sequential(
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, action_size) # 输出每个动作的优势值
+            nn.Linear(hidden_size, action_size)
         )
 
     def forward(self, state):
@@ -84,7 +61,7 @@ class EpsilonGreedyActionSelector(nn.Module):
         elif self.decay == "exp":
             raise NotImplementedError
 
-        # 生成随机动作和贪婪动作
+
         num_actions = agent_qs.shape[-1]
         random_actions = torch.randint(
             0, num_actions, agent_qs.shape[:-1], device=agent_qs.device
@@ -92,7 +69,7 @@ class EpsilonGreedyActionSelector(nn.Module):
         greedy_actions = agent_qs.argmax(dim=-1, keepdim=True)
 
         mask = torch.rand(greedy_actions.shape, device=greedy_actions.device) < epsilon
-        actions = torch.where(mask, random_actions, greedy_actions)  # 组合随机和贪婪动作
+        actions = torch.where(mask, random_actions, greedy_actions)
         return actions, epsilon
     
 class DQNPolicy:

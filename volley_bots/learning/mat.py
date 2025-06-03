@@ -118,7 +118,7 @@ class MATPolicy(object):
         self.decoder_out_keys = [
             self.act_name,
             self.act_logps_name,
-            f"{self.agent_spec.name}.action_entropy",  # 动作的熵，用于度量不确定性
+            f"{self.agent_spec.name}.action_entropy",
         ]
 
         encoder = Encoder(
@@ -337,11 +337,11 @@ class MATPolicy(object):
         if rewards.shape[-1] != 1:
             rewards = rewards.sum(-1, keepdim=True)
 
-        # 获取整个轨迹的值函数和最后一个时间步的后续状态价值
+
         values = tensordict["state_value"]  # [E,T,A,1]
         next_value = value_output["state_value"].squeeze(
             0
-        )  # [E,A,1]，用于GAE递归计算的初始条件
+        )
 
         if hasattr(self, "value_normalizer"):
             values = self.value_normalizer.denormalize(values)
@@ -349,7 +349,7 @@ class MATPolicy(object):
 
         dones = self._get_dones(tensordict)
 
-        # 计算广义优势估计（GAE）和返回值
+
         tensordict["advantages"], tensordict["returns"] = compute_gae(
             rewards,
             dones,
@@ -520,10 +520,10 @@ class SelfAttention(nn.Module):
         )  # (B, n_head, L, head_dim)
         q = (
             self.query(query).view(B, L, self.n_head, D // self.n_head).transpose(1, 2)
-        )  # 同上
+        )
         v = (
             self.value(value).view(B, L, self.n_head, D // self.n_head).transpose(1, 2)
-        )  # 同上
+        )
 
         att = (q @ k.transpose(-2, -1)) * (
             1.0 / math.sqrt(k.size(-1))

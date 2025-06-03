@@ -8,10 +8,10 @@ CUDA_VISIBLE_DEVICES=0 python ../train_psro_cross_play.py headless=true \
     task.symmetric_obs=True \
     run_name_suffix="psro_uniform_vs_psro_nash" \
     seed=0 \
-    append_actors_0_from_path="/home/zhangruize/VolleyBots/scripts/shell/crossplay/psro_uniform_population" \
-    append_actors_1_from_path="/home/zhangruize/VolleyBots/scripts/shell/crossplay/psro_nash_population" \
-    load_meta_policy_1_path="/home/zhangruize/VolleyBots/scripts/shell/crossplay/psro_nash_meta_policy.npz" \
-    # wandb.mode=disabled \
+    append_actors_0_from_path="../../checkpoints/crossplay/psro_uniform_population" \
+    append_actors_1_from_path="../../checkpoints/crossplay/psro_nash_population" \
+    load_meta_policy_1_path="../../checkpoints/crossplay/psro_nash_meta_policy.npz" \
+    wandb.mode=disabled \
     # only_eval=true \
     
     

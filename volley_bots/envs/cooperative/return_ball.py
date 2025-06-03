@@ -46,7 +46,7 @@ def cal_ori(roll, pitch, yaw, device):
     # pitch = torch.where(pitch > math.pi, pitch - math.pi, pitch)
     # pitch = torch.where(pitch < -math.pi, pitch + math.pi, pitch)
 
-    # yaw = torch.zeros_like(pitch)  # 设定 yaw 角
+
 
     qx = torch.sin(roll / 2) * torch.cos(pitch / 2) * torch.cos(yaw / 2) - torch.cos(
         roll / 2

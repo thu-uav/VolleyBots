@@ -230,21 +230,21 @@ def calculate_penalty_drone_pos(
         torch.Tensor: _description_
     """
 
-    # 太靠近网或者后面的边界
+
     penalty_x = (drone_pos[:, :, 0].abs() < dist_x).float() * (
         dist_x - drone_pos[:, :, 0].abs()
     ) + ((L / 2 - drone_pos[:, :, 0].abs()) < dist_x).float() * (
         dist_x - (L / 2 - drone_pos[:, :, 0].abs())
     )  # (E,2)
 
-    # 太靠近两条边线
+
     penalty_y = (drone_pos[:, :, 1].abs() < dist_y).float() * (
         dist_y - drone_pos[:, :, 1].abs()
     ) + ((W / 2 - drone_pos[:, :, 1].abs()) < dist_y).float() * (
         dist_y - (W / 2 - drone_pos[:, :, 1].abs())
     )  # (E,2)
 
-    # 太靠近地面或者太高
+
     penalty_z = ((drone_pos[:, :, 2] - anchor[:, 2]).abs() > dist_z) * (
         (drone_pos[:, :, 2] - anchor[:, 2]).abs() - dist_z
     )  # (E,2)
@@ -358,8 +358,8 @@ class Volleyball1v1(IsaacEnv):
             "truncated",
             "done",
         ]
-        # torchrl在遇到done的时：tensordict分为root和next，会把next拿出来作为新的tensordict_2的root并且reset，但是由于共享地址，会导致之前那个tensordict也被reset
-        # 见_reset_idx，所以希望在stats能保留下来，因为这几个量只有最后end时候才会生成，且判定不是按照stats里面的done，而是根据root的done判定，所以不会有问题
+
+
 
         # coefs
         self.game_reward_coef = 100.0
@@ -749,7 +749,7 @@ class Volleyball1v1(IsaacEnv):
                 z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
                 return torch.stack([w, x, y, z], dim=-1)
 
-            # q_m: 围绕z轴180度旋转的四元数
+
             q_m = torch.tensor([[0, 0, 0, 1]] * rot.shape[0], device=rot.device)
             rot[:, 1, :] = quaternion_multiply(q_m, rot[:, 1, :])
             rot[:, 1, :] = torch.where(
@@ -831,7 +831,7 @@ class Volleyball1v1(IsaacEnv):
                 "agents": {
                     "observation": obs,
                 },
-                "stats": self.stats,  # reset_id的时候需要保留上一个step没有reset的环境的stats
+                "stats": self.stats,
                 "info": self.info,
             },
             self.num_envs,
@@ -945,30 +945,30 @@ class Volleyball1v1(IsaacEnv):
         racket_hit_ball, drone_hit_ball = self.check_hit(sim_dt=self.dt)
         wrong_hit_racket = (
             drone_hit_ball & ~racket_hit_ball
-        )  # (E, 2) 在该无人机击球回合，该无人机击球成功，但是未击中球拍，则为错误击球
+        )
         which_drone = self.rpos_ball.norm(p=2, dim=-1).argmin(
             dim=1
         )  # (E,1) which drone is closer to the ball
         true_hit = racket_hit_ball & (self.turn == which_drone).unsqueeze(
             -1
-        )  # (E, 2) 在该无人机击球回合，该无人机击球成功，则为正确击球
+        )
         switch_turn = true_hit.any(-1, keepdim=True)  # (E, 1)
         wrong_hit_turn = racket_hit_ball & (self.turn != which_drone).unsqueeze(
             -1
-        )  # (E, 2) 在非该无人机击球回合，该无人机击球成功，则为错误击球
-        drone_hit_ground = self.drone.pos[..., 2] < 0.3  # (E, 2) 无人机坠地
+        )
+        drone_hit_ground = self.drone.pos[..., 2] < 0.3
 
         self.ball_last_vel = self.ball_vel.clone()
         self.last_hit_step[racket_hit_ball] = self.progress_buf[
             racket_hit_ball.any(-1)
         ].long()
 
-        # 约束无人机的位置不要太离谱
+
         penalty_drone_hit_ground = self.drone_hit_ground_penalty_coef * drone_hit_ground
         penalty_pos = self.drone_pos_penalty_coef * calculate_penalty_drone_pos(
             self.drone.pos, self.L, self.W, self.anchor
         )  # (E,2)
-        # heuristic 让无人机倾向于击球
+
         reward_rpos = self.rpos_reward_coef * (
             turn_to_mask(self.turn).float()
             / (1 + torch.norm(self.rpos_ball[..., :2], p=2, dim=-1))
@@ -1070,7 +1070,7 @@ class Volleyball1v1(IsaacEnv):
         return TensorDict(
             {
                 "agents": {"reward": reward.unsqueeze(-1)},
-                "stats": self.stats,  # 否则isaac_env里的stats会滞后trainevery个steps
+                "stats": self.stats,
                 "done": done,
                 "terminated": terminated,
                 "truncated": truncated,

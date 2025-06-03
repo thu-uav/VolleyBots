@@ -1,26 +1,3 @@
-# MIT License
-# 
-# Copyright (c) 2023 Botian Xu, Tsinghua University
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -71,7 +48,7 @@ class QMIXPolicy:
 
         obs_encoder = make_encoder(cfg.q_net, agent_spec.observation_spec)
         hidden_dim = cfg.q_net.hidden_dim
-        # Q网络结构：obs编码器 -> GRU -> 线性层输出Q值
+
         self.agent_q = TensorDictSequential(
             TensorDictModule(obs_encoder, [self.obs_name], ["hidden"]),
             TensorDictModule(
@@ -88,25 +65,26 @@ class QMIXPolicy:
         # print("GRU", GRU(obs_encoder.output_shape.numel(), hidden_dim))
         self.target_agent_q = copy.deepcopy(self.agent_q)
 
-        # 动作选择器 输入：Q值和时间步长，输出：动作和epsilon   
+
         self.action_selector = TensorDictModule(
             EpsilonGreedyActionSelector(anneal_time=self.cfg.anneal_time), 
             [f"{self.agent_name}.q", "epsilon_t"], 
             [self.act_name, "epsilon"]
         )
 
-        if agent_spec.state_spec is not None:
-            state_encoder = make_encoder(cfg.q_mixer, agent_spec.state_spec)
-        else:
-            state_encoder = make_encoder(cfg.q_mixer, agent_spec.observation_spec)
+        # if agent_spec.state_spec is not None:
+        #     state_encoder = make_encoder(cfg.q_mixer, agent_spec.state_spec)
+        # else:
+        state_encoder = make_encoder(cfg.q_mixer, agent_spec.observation_spec)
+        
         # print("state_encoder", state_encoder)
         # print("agent_spec.state_spec",agent_spec.state_spec)
         # print("state_encoder.output_shape.numel()", state_encoder.output_shape.numel())
         hidden_dim = cfg.q_mixer.hidden_dim
         mixer = QMIXer(n_agents, state_encoder.output_shape.numel(), hidden_dim)
         self.mixer = TensorDictSequential(
-            TensorDictModule(state_encoder, [self.state_name], ["mixer_hidden"]), # state_encoder 处理state，输出写入mixer_hidden
-            TensorDictModule(mixer, [f"chosen_q", "mixer_hidden"], [f"q_tot"]), # mixer读取chosen_q和mixer_hidden，将结果写入q_tot（联合Q值）
+            TensorDictModule(state_encoder, [self.state_name], ["mixer_hidden"]),
+            TensorDictModule(mixer, [f"chosen_q", "mixer_hidden"], [f"q_tot"]),
         ).to(self.device)
         self.target_mixer = copy.deepcopy(self.mixer)
 
@@ -118,7 +96,7 @@ class QMIXPolicy:
         self.t = 0 # for epsilon annealing
 
     def __call__(self, tensordict: TensorDict):
-        # 前向传播（与环境交互时调用）
+
         tensordict.set(
             "epsilon_t", 
             torch.full([*tensordict.shape, self.agent_spec.n], self.t, device=self.device)
@@ -132,7 +110,7 @@ class QMIXPolicy:
         return tensordict
 
     def _call(self, tensordict: TensorDict, agent_q: TensorDictSequential, vmap_dim: int):
-        # Q_Net前向计算，计算multi agent的Q
+
         q_input = tensordict.select(*agent_q.in_keys, strict=False) 
         q_input["is_init"] = expand_right(
             q_input["is_init"], (*q_input.batch_size, self.agent_spec.n)
@@ -178,9 +156,9 @@ class QMIXPolicy:
                 target_qs: torch.Tensor = self._call(batch["next"], self.target_agent_q, 2)[f"{self.agent_name}.q"]
                 target_max_qs = target_qs.max(dim=-1, keepdim=True).values
 
-            # 计算联合Q值  [N, L, 1]
+
             chosen_action_q_tot = self.mixer(
-                batch.set("chosen_q", chosen_action_qs), # 将chosen_action_qs写入batch
+                batch.set("chosen_q", chosen_action_qs),
             )["q_tot"]
             next_obs = batch["next"]["agents"]["observation"]  # [N, L, 2, 39]
             batch_size = next_obs.shape[0:2]  # [N, L]

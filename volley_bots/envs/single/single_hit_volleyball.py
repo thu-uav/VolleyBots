@@ -982,16 +982,16 @@ class SingleHitVolleyball(IsaacEnv):
 
         hit = ball_contact_forces.any(-1)  # (E,1)
 
-        # hit_is_close = hit & is_close  # (E,1) 击球且距离球较近
+
 
         true_hit_step_gap = 25  # 25 * 0.016s = 0.4s
         true_hit = hit & (
             (self.progress_buf.unsqueeze(-1) - self.last_hit_t) > true_hit_step_gap
-        )  # (E,1) 击球时间大于30个step才是正确的一次击球
+        )
         wrong_hit_step_gap = 25  # 25 * 0.016s = 0.4s
         wrong_hit = hit & (
             (self.progress_buf.unsqueeze(-1) - self.last_hit_t) <= wrong_hit_step_gap
-        )  # (E,1) 击球时间小于30个step则为错误击球
+        )
 
         self.num_true_hits += true_hit
         self.ball_current_z_max = torch.max(
@@ -1016,17 +1016,17 @@ class SingleHitVolleyball(IsaacEnv):
         # self.right_hit_dist_to_anchor += right_hit * torch.norm(self.drone.pos[:, 1] - self.anchor[1], p=2, dim=-1, keepdim=True)
 
         # # TODO: simplify
-        # new_drone_last_hit_t = torch.where(hit, self.progress_buf.unsqueeze(-1), drone_last_hit_t)  # (E,1) 更新drone_last_hit_t
+
         # new_last_hit_t = new_drone_last_hit_t * (which_drone == torch.arange(2, device=which_drone.device).unsqueeze(0)).long() # (E,2)
         # new_last_hit_t += self.last_hit_t * (which_drone != torch.arange(2, device=which_drone.device).unsqueeze(0)).long() # (E,2)
-        # self.last_hit_t = new_last_hit_t # (E,2) 两个无人机各自的上次击球时刻
+
         if true_hit.any():
             self.last_hit_t[true_hit] = self.progress_buf.unsqueeze(-1)[true_hit].long()
 
-        # switch_turn: torch.Tensor = true_hit & (self.turn.unsqueeze(-1) == which_drone)  # (E,1) 在该无人机击球回合，该无人机击球成功，则轮到另一个无人机击球
-        # wrong_hit_2: torch.Tensor = true_hit & (self.turn.unsqueeze(-1) != which_drone)  # (E,1) 在非该无人机击球回合，该无人机击球成功，则为错误击球
 
-        # wrong_hit = wrong_hit_1 | wrong_hit_2  # (E,1) 错误击球
+
+
+
 
         # if self._should_render(0) and switch_turn.any():
         #     self.debug_draw_turn()
@@ -1038,16 +1038,16 @@ class SingleHitVolleyball(IsaacEnv):
         # if switch_turn.any():
         #     self.turn = turn_shift(self.turn, switch_turn.squeeze(-1))
 
-        # reward_rpos = 0.03 * calculate_reward_rpos(self.turn, self.rpos_ball)  # (E,2) 有正有负：该回合无人机为正（离得远近值越大），非该回合无人机为负（离得越近值越小）
+
 
         # not_turn_with_success = turn_to_mask((self.turn + 1) % 2) & (self.stats["num_turns"] > 0) # (E,2)
-        # reward_ball_height = 0.01 * calculate_ball_height_reward(self.ball_pos) * not_turn_with_success.float() # (E,2) 如果有成功打过去过，则：该回合无人机奖励为0，非该回合无人机为正，让打过去的球高度越高越好（有最大值限制）
-        # reward_ball_height = 0.01 * calculate_ball_height_reward(self.ball_pos[..., 2] - self.anchor[:, 0, 2]) * not_turn_with_success.float() # (E,2) 如果有成功打过去过，则：该回合无人机奖励为0，非该回合无人机为正，让打过去的球高度越高越好（有最大值限制）
+
+
 
         dist_to_anchor: torch.Tensor = torch.norm(
             self.drone.pos - self.anchor, p=2, dim=-1
         )  # (E,1)
-        # penalty_anchor = (calculate_penalty_anchor(dist_to_anchor) * 0.03)  # (E,1) 击球前无人机离其anchor距离大于1有惩罚，击球后无人机离其anchor距离大于0.5有惩罚
+
 
         penalty_anchor = (dist_to_anchor > 1.0).float() * 0.05
         # penalty_anchor = dist_to_anchor * 0.05
@@ -1084,9 +1084,9 @@ class SingleHitVolleyball(IsaacEnv):
         distance_reward = _dist_reward_factor * ball_done * dist_x
 
         # angular_penalty = switch_turn.squeeze(-1).float() * (1 - cosine_similarity).clamp(min=0.04, max=1.0) * _reward_score_factor  # (E,)
-        # angular_penalty = turn_to_mask(old_turn).float() * angular_penalty.unsqueeze(-1)  # only apply to the drone that's taking its turn  # (E,2) 击球之后瞬间，球速度和无人机相对位置方向的惩罚
 
-        # 思路是，在xz平面上，球应该差不多打到锚点附近
+
+
         # t = (self.ball_pos[:, 0, 0].abs() + 1) / self.ball_vel[:, 0, 0].abs()  # (E,)
         # h = (
         #     self.ball_pos[:, 0, 2]

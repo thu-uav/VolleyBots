@@ -715,17 +715,17 @@ class MultiAttackVolleyballHard(IsaacEnv):
         points = self.anchor.clone() + ori
         points = points.tolist()
         colors = []
-        if ball_near_racket[0] == True:  # 球进入击球范围
+        if ball_near_racket[0] == True:
             colors.append((0, 1, 0, 1))  # green
-        elif true_hit[0] == True:  # 不在击球范围但有击球发生
+        elif true_hit[0] == True:
             colors.append((1, 0, 0, 1))  # red
-        else:  # 不在击球范围且无击球发生
+        else:
             colors.append((1, 1, 0, 1))  # yellow
-        if ball_near_racket[1] == True:  # 球进入击球范围
+        if ball_near_racket[1] == True:
             colors.append((0, 1, 0, 1))  # green
-        elif true_hit[1] == True:  # 不在击球范围但有击球发生
+        elif true_hit[1] == True:
             colors.append((1, 0, 0, 1))  # red
-        else:  # 不在击球范围且无击球发生
+        else:
             colors.append((1, 1, 0, 1))  # yellow
         sizes = [30.0, 30.0]
         self.draw.draw_points(points, colors, sizes)
@@ -853,7 +853,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
         ball_vel_now = self.ball_vel.squeeze()
         env_positions = self.envs_positions.squeeze()
 
-        # 获取满足条件的 env
+
         mask = (
             (self.turn[:, 0] == 2)
             & (ball_vel_now[:, 0] < -2.0)
@@ -861,9 +861,9 @@ class MultiAttackVolleyballHard(IsaacEnv):
             & (self.board_create_traj == 1)
             & (ball_pose_now[:, 2] >= 1.2)
         )
-        env_indices = torch.nonzero(mask).squeeze(-1)  # 取出符合条件的环境索引
+        env_indices = torch.nonzero(mask).squeeze(-1)
 
-        if env_indices.numel() > 0:  # 确保有满足条件的 env
+        if env_indices.numel() > 0:
 
             ball_predict_pose, ball_predict_vel, ball_predict_t = (
                 get_ball_traj_without_kd(
@@ -884,7 +884,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
             )
             valid_indices = env_indices[
                 valid_mask
-            ]  # 选取满足 ball_predict_t 和位置信息的 env
+            ]
 
             if valid_indices.numel() > 0:
 
@@ -909,19 +909,19 @@ class MultiAttackVolleyballHard(IsaacEnv):
                 self.board_create_traj[valid_indices] = 0
                 self.board_excute_traj[valid_indices] = 1
 
-                idx = self.current_index[valid_indices]  # 获取当前索引
+                idx = self.current_index[valid_indices]
                 """
                 只有1个轨迹点, 实际上 idx 这里都是0
                 there may be some bugs.
                 uav_data是用valid_mask算的，ball_predict_t是用env_indices算的
                 """
-                # 获取位移向量
+
                 delta_dist = uav_data[:, :3] - self.init_board_offset  # (N,3)
-                # 计算单位时间应移动的实际距离
+
                 dist = torch.norm(delta_dist, dim=-1) / ball_predict_t[valid_mask]
 
-                # 判断单位时间内板的移动距离是否大于限制
-                # 如果是，设置移动距离为最大限制，否则设置为所求
+
+
                 norm_uav_pos = torch.norm(delta_dist, dim=-1, keepdim=True)  #  (N,1)
                 scale = torch.where(
                     dist.unsqueeze(-1) >= self.dist_max,
@@ -932,23 +932,23 @@ class MultiAttackVolleyballHard(IsaacEnv):
                 self.dist[valid_indices, idx, :] = scale * delta_dist * self.dt
                 self.p_l[valid_indices, idx, :] = self.dist[valid_indices, idx, :]
 
-                # 获取角度速率, 分别求roll,pitch,yaw, 为了比较此处全部取绝对值
+
                 # print("print(uav_data[:, 6:9])", uav_data[:, 6:9])
                 rpy_r_vel = torch.abs(uav_data[:, 6]) / ball_predict_t[valid_mask]
                 rpy_p_vel = torch.abs(uav_data[:, 7]) / ball_predict_t[valid_mask]
                 rpy_y_vel = torch.abs(uav_data[:, 8]) / ball_predict_t[valid_mask]
 
-                # 设置比较所需tensor
+
                 rpy_m = (
                     torch.ones(rpy_r_vel.shape, device=self.device, dtype=self.dtype)
                     * self.rpy_max
                 )
 
-                # 计算实际的正负
+
                 sign = torch.sign(uav_data[:, 6:9])
                 # print(sign)
-                # 判断单位时间内板的各向角度移动是否大于限制
-                # 如果是，设置角度移动为最大限制，否则设置为所求
+
+
                 rpy_r_vel = (
                     torch.where(rpy_r_vel >= rpy_m, rpy_m, rpy_r_vel)
                     * sign[:, 0]
@@ -977,7 +977,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
 
                 self.o_l[valid_indices, idx] = torch.stack(
                     (qw, qx, qy, qz), dim=1
-                )  # 单位方向
+                )
                 self.rpy[valid_indices, idx] = self.rpy_per_step[valid_indices, idx]
                 self.v_l[valid_indices, idx] = torch.cat(
                     (
@@ -989,16 +989,16 @@ class MultiAttackVolleyballHard(IsaacEnv):
                         ),
                     ),
                     dim=1,
-                )  # 速度
+                )
 
-                self.current_index[valid_indices] += 1  # 更新轨迹索引
+                self.current_index[valid_indices] += 1
 
-        # 获取执行轨迹的环境索引,实际上和上面的valid_indices是一样的
+
         excute_mask = (self.board_excute_traj == 1) & (self.board_create_traj == 0)
         excute_indices = torch.nonzero(excute_mask).squeeze(-1)
 
         if excute_indices.numel() > 0:
-            # 选择 hit 还是 recover
+
             hit_mask = ball_vel_now[excute_indices, 0] <= 0
             recover_mask = ~hit_mask
 
@@ -1006,7 +1006,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
             recover_indices = excute_indices[recover_mask]
             # print("hit_indices",hit_indices)
             # print("recover_indices",recover_indices)
-            # **Hit 逻辑**
+
             """self.board.set_world_poses(board_pos + self.envs_positions[env_ids], ball_rot, env_ids)
             there may be some bugs.
             """
@@ -1046,16 +1046,16 @@ class MultiAttackVolleyballHard(IsaacEnv):
                 self.env_return_ball_count[recover_indices] = 1
                 self.board_excute_traj[recover_indices] = 0
                 self.board_create_traj[recover_indices] = 1
-                self.p_l[recover_indices, 0] = 0  # 清空轨迹
+                self.p_l[recover_indices, 0] = 0
                 self.v_l[recover_indices, 0] = 0
                 self.o_l[recover_indices, 0] = 0
                 self.dist[recover_indices, 0] = 0
                 self.rpy_per_step[recover_indices, 0] = 0
                 self.rpy[recover_indices, 0] = 0
-                self.current_index[recover_indices] = 0  # 轨迹索引归零
+                self.current_index[recover_indices] = 0
             # self.return_ball = 0
 
-        # 确保 board 在 reset 时返回初始状态
+
         reset_mask = ball_vel_now[:, 0] == 0
         reset_indices = torch.nonzero(reset_mask).squeeze(-1)
 
@@ -1063,7 +1063,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
             self.board_create_traj[reset_indices] = 1
             self.board_excute_traj[reset_indices] = 0
 
-        # 创建新轨迹
+
         create_mask = self.board_create_traj == 1
         create_indices = torch.nonzero(create_mask).squeeze(-1)
 
@@ -1079,12 +1079,12 @@ class MultiAttackVolleyballHard(IsaacEnv):
                 torch.zeros((create_indices.shape[0], 6), device=self.device),
                 env_indices=create_indices,
             )
-            self.p_l[create_indices] = 0  # 清空轨迹
+            self.p_l[create_indices] = 0
             self.v_l[create_indices] = 0
             self.o_l[create_indices] = 0
-            self.current_index[create_indices] = 0  # 轨迹索引归零
+            self.current_index[create_indices] = 0
 
-        # 更新 `board_create_traj` 状态
+
         update_mask = ball_vel_now[:, 0] >= 0.5
         update_indices = torch.nonzero(update_mask).squeeze(-1)
 
@@ -1175,7 +1175,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
         # ball misbehave
         ball_too_low = self.ball_pos[..., 2] < 2 * self.ball_radius  # (E, 1)
 
-        # 只在 ball_too_low 第一次发生时更新计时器
+
         self.ball_too_low_timer[ball_too_low & (self.ball_too_low_timer == -1)] = (
             self.progress_buf.unsqueeze(-1)[
                 ball_too_low & (self.ball_too_low_timer == -1)
@@ -1212,19 +1212,19 @@ class MultiAttackVolleyballHard(IsaacEnv):
         true_hit_step_gap = 3
         true_hit = sim_hit & (
             (self.progress_buf.unsqueeze(-1) - self.last_hit_step) > true_hit_step_gap
-        )  # (E, 2) 击球时间大于3个step才是正确的一次击球
+        )
         wrong_hit_sim = sim_hit & (
             (self.progress_buf.unsqueeze(-1) - self.last_hit_step) <= true_hit_step_gap
-        )  # (E, 2) 击球时间小于3个step则为仿真器错误击球
+        )
         self.last_hit_step[sim_hit] = self.progress_buf[sim_hit.any(-1)]
 
         wrong_hit_turn: torch.Tensor = true_hit & (
             self.turn != hit_drone
-        )  # (E, 2) 在非该无人机击球回合，该无人机击球成功，则为错误击球
+        )
         ball_near_racket = self.check_ball_near_racket()
         wrong_hit_racket = true_hit & torch.logical_not(ball_near_racket)
-        wrong_hit = wrong_hit_turn | wrong_hit_racket  # (E, 2) 错误击球
-        success_hit = true_hit & torch.logical_not(wrong_hit)  # (E, 2) 正确击球
+        wrong_hit = wrong_hit_turn | wrong_hit_racket
+        success_hit = true_hit & torch.logical_not(wrong_hit)
 
         self.turn = self.turn + success_hit.any(dim=-1, keepdim=True)
 
@@ -1325,7 +1325,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
         )  # (E, 1)
 
         # shaping reward
-        # 无人机主动迎球
+
         dist_to_ball_xy = torch.norm(
             self.drone.pos[..., :2] - self.ball_pos[..., :2], p=2, dim=-1
         )  # (E, 2)
@@ -1351,9 +1351,9 @@ class MultiAttackVolleyballHard(IsaacEnv):
         )  # (E, 1)
         reward_hit_direction = (
             _direction_reward_coeff * success_hit * cosine_similarity
-        )  # individual, sparse, (E, 2) 二传向攻手，攻手向目标点击球
+        )
 
-        _spike_reward_coeff = 0.2  # 攻手击球后z方向速度大
+        _spike_reward_coeff = 0.2
         reward_spike_velocity = (
             _spike_reward_coeff
             * success_hit[..., 1].unsqueeze(-1)

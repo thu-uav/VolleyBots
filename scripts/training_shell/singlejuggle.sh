@@ -1,8 +1,7 @@
 total_frames=500_000_000
-algorithm="mappo"  # mappo, maddpg
-action_transform="PIDrate"  # PIDrate, null
+algorithm="mappo"  # mappo, maddpg, td3, sac, dqn
+action_transform=""  # PIDrate, null
 throttles_in_obs=true # true, false
-wandb_project="omnidrones"
 seed=0  # 0, 1, 2
 
 CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
@@ -20,4 +19,3 @@ CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
     task.throttles_in_obs=${throttles_in_obs}\
     seed=${seed} \
     wandb.mode=disabled \
-    # wandb.project=${wandb_project} \

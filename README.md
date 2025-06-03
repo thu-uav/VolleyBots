@@ -17,6 +17,8 @@ Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi 
 - [Overview](#overview)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Pre-trained Models](#pre-trained-models)
+- [Experimental Setup](#experimental-setup)
 - [Citation](#citation)
 - [Acknowledgement](#ackowledgement)
 
@@ -88,16 +90,40 @@ Get the submodules:
 git submodule update --init --recursive
 ```
 
-Pip install these two packages respectively:
+Install `tensordict`:
 ```bash
 # at VolleyBots/
 cd third-party/tensordict
-pip install -e .
+python setup.py develop
 ```
+
+Before install `torchrl`, first check and update gcc and g++:
+```bash
+# check gcc version, should be like: gcc (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0 ...
+gcc --version
+
+# if not gcc 9.x, check available gcc
+ls /usr/bin/gcc*
+
+# if gcc-9 is not installed
+sudo apt update && sudo apt install gcc-9
+# if gcc-9 is installed
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100
+sudo update-alternatives --config gcc
+# then follow instructions to select gcc-9.
+
+# check gcc version again
+gcc --version
+
+# apply same update and config to g++
+```
+
+Then install `torchrl`:
+
 ```bash
 # at VolleyBots/
-cd third-party/torchrl
-pip install -e .
+cd third-party/rl
+python setup.py develop
 ```
 
 Also we need to install `orbit` package of Isaac Sim. Note that currently `orbit` package has been integrated into `Isaac Lab` package, but this branch still uses the standalone `orbit` package (this can be updated in the future). So we manage the older version of `orbit` package using Git submodule. To install the `orbit` package, follow these steps: 
@@ -121,7 +147,7 @@ sudo apt install cmake build-essential
 ```bash
 # at VolleyBots/
 cd scripts
-python train.py headless=true wandb.mode=disabled
+python train.py headless=true wandb.mode=disabled total_frames=50000 task=SingleJuggleVolleyball task.env.num_envs=16
 ```
 
 ### Option 2: Install Container Version (using Docker)
@@ -167,10 +193,10 @@ Note that:
 
 Install VolleyBots in the container:
 ```bash
-conda activate volley
+conda activate sim2
 cd /root/VolleyBots
 cp -r conda_setup/etc $CONDA_PREFIX
-conda activate volley # re-activate the environment
+conda activate sim2 # re-activate the environment
 pip install -e . # install VolleyBots
 ```
 
@@ -178,14 +204,14 @@ Verify you can successfully run VolleyBots in the container (use ``deploy`` bran
 
 ```bash
 cd /root/VolleyBots/scripts
-python train.py headless=true wandb.mode=disabled total_frames=50000 task=Hover
+python train.py headless=true wandb.mode=disabled total_frames=50000 task=SingleJuggleVolleyball task.env.num_envs=16
 ```
 
     
 ## Usage
 
 <!-- TODO -->
-### Configuration
+### 1. Configuration
 
 We use [`hydra`](https://hydra.cc/docs/intro/) to manage the configurations. You can find the configuration files in `cfg`.
 
@@ -235,7 +261,7 @@ wandb:
   tags:
 ```
 
-### Training
+### 2. Training
 
 To train a model, you can run the following command:
 
@@ -244,14 +270,33 @@ To train a model, you can run the following command:
 python train.py <TRAIN_CONFIGS> <TASK_CONFIGS> <ALGO_CONFIGS>
 ```
 
-We provide example training scripts for each task included in our paper. You can find them in the `scripts/shell` directory. For example, to train a model for the `Volleyball1v1` task using `self-play`, you can run:
+We also provide example training scripts for each task included in our paper. You can find them in the `scripts/training_shell` directory. For example, to train a model for the `Volleyball1v1` task using `self-play`, you can run:
 
 ```bash
-# at VolleyBots/scripts/shell
+# at VolleyBots/scripts/training_shell
 bash volleyball1v1_sp.sh
 ```
 
-If you want to use your own configurations, simply pass the customized configurations to the training script. 
+### 3. Evaluation
+
+We include the example evaluation scripts from our paper in the `scripts/evalution_shell` directory. For example, to evalute the cross-play win rate between psro_uniform and psro_nash on the `Volleyball3v3` task, you can run:
+
+```bash
+# at VolleyBots/scripts/evaluation_shell
+bash volleyball3v3_crossplay.sh
+```
+
+## Pre-trained Models
+We offers trained checkpoints at ``VolleyBots/checkpoints`` directory for evaluating exploitability and cross-play win rates, and we also include hierarchical policy checkpoints for competing against the self-play baseline in the 3 vs 3 task.
+
+## Experimental Setup
+
+Our experiments were run on a workstation with:
+
+* **GPU**: NVIDIA GeForce RTX 4090
+* **RAM**: 128 GB
+* **OS**: Ubuntu 20.04 LTS
+* **Software**: CUDA 12.4
 
 ## Citation
 

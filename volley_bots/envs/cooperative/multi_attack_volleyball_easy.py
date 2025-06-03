@@ -619,17 +619,17 @@ class MultiAttackVolleyballEasy(IsaacEnv):
         points = self.anchor.clone() + ori
         points = points.tolist()
         colors = []
-        if ball_near_racket[0] == True:  # 球进入击球范围
+        if ball_near_racket[0] == True:
             colors.append((0, 1, 0, 1))  # green
-        elif true_hit[0] == True:  # 不在击球范围但有击球发生
+        elif true_hit[0] == True:
             colors.append((1, 0, 0, 1))  # red
-        else:  # 不在击球范围且无击球发生
+        else:
             colors.append((1, 1, 0, 1))  # yellow
-        if ball_near_racket[1] == True:  # 球进入击球范围
+        if ball_near_racket[1] == True:
             colors.append((0, 1, 0, 1))  # green
-        elif true_hit[1] == True:  # 不在击球范围但有击球发生
+        elif true_hit[1] == True:
             colors.append((1, 0, 0, 1))  # red
-        else:  # 不在击球范围且无击球发生
+        else:
             colors.append((1, 1, 0, 1))  # yellow
         sizes = [30.0, 30.0]
         self.draw.draw_points(points, colors, sizes)
@@ -836,19 +836,19 @@ class MultiAttackVolleyballEasy(IsaacEnv):
         true_hit_step_gap = 3
         true_hit = sim_hit & (
             (self.progress_buf.unsqueeze(-1) - self.last_hit_step) > true_hit_step_gap
-        )  # (E, 2) 击球时间大于3个step才是正确的一次击球
+        )
         wrong_hit_sim = sim_hit & (
             (self.progress_buf.unsqueeze(-1) - self.last_hit_step) <= true_hit_step_gap
-        )  # (E, 2) 击球时间小于3个step则为仿真器错误击球
+        )
         self.last_hit_step[sim_hit] = self.progress_buf[sim_hit.any(-1)]
 
         wrong_hit_turn: torch.Tensor = true_hit & (
             self.turn != hit_drone
-        )  # (E, 2) 在非该无人机击球回合，该无人机击球成功，则为错误击球
+        )
         ball_near_racket = self.check_ball_near_racket()
         wrong_hit_racket = true_hit & torch.logical_not(ball_near_racket)
-        wrong_hit = wrong_hit_turn | wrong_hit_racket  # (E, 2) 错误击球
-        success_hit = true_hit & torch.logical_not(wrong_hit)  # (E, 2) 正确击球
+        wrong_hit = wrong_hit_turn | wrong_hit_racket
+        success_hit = true_hit & torch.logical_not(wrong_hit)
 
         self.turn = self.turn + success_hit.any(dim=-1, keepdim=True)
 

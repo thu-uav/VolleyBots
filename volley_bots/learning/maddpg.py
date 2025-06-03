@@ -105,7 +105,7 @@ class MADDPGPolicy(object):
             actors = nn.ModuleList([create_actor() for _ in range(self.agent_spec.n)])
             self.actor = actors[0]
             self.actor_opt = torch.optim.Adam(actors.parameters(), lr=self.cfg.actor.lr)
-            # 收集所有演员的参数
+
             self.actor_params = torch.stack(
                 [make_functional(actor) for actor in actors]
             )
@@ -133,7 +133,7 @@ class MADDPGPolicy(object):
     ) -> TensorDict:
 
         actor_output = self._call_actor(tensordict, self.actor_params)
-        # 添加噪声到动作输出
+
         if deterministic == False:
             action_noise = (
                 actor_output[self.act_name]
@@ -187,14 +187,14 @@ class MADDPGPolicy(object):
                         )
                         next_action = torch.clamp(next_action + action_noise, -1, 1)
 
-                    # 计算下一个状态的Q值，原来MATD3是计算2个target critic后取最小值
+
                     next_qs = self.critic_target(
                         next_state, next_action
                     )  # [batchsize,2,1]
 
                     target_q = (
                         reward + self.cfg.gamma * (1 - next_dones) * next_qs
-                    ).detach()  # [batchsize, 2 ,1]，这里的2对于agent num
+                    ).detach()
 
                     assert not torch.isinf(target_q).any()
                     assert not torch.isnan(target_q).any()
@@ -289,7 +289,7 @@ class Critic(nn.Module):
         self.state_spec = state_spec
         self.num_critics = num_critics
 
-        # 创建多个评论者
+
         # self.critics = nn.ModuleList([
         #     self._make_critic() for _ in range(self.num_critics)
         # ])
@@ -302,9 +302,9 @@ class Critic(nn.Module):
             state_dim = self.state_spec.shape[-1]
             num_units = [
                 action_dim * self.num_agents
-                + state_dim * self.num_agents,  # 输入是act和state的cat
+                + state_dim * self.num_agents,
                 *self.cfg["hidden_units"],
-            ]  # 各层神经元个数
+            ]
             base = MLP(num_units)
         elif isinstance(self.state_spec, CompositeSpec):
 
@@ -330,7 +330,7 @@ class Critic(nn.Module):
         actions = actions.flatten(1)
         x = torch.cat(
             [state, actions], dim=-1
-        )  # 将状态和动作拼接 [batch_size, num_agents*(state_dim+action_dim)]
+        )
 
         # return torch.stack([critic(x) for critic in self.critics], dim=-1)
         return self.critic[0](x).unsqueeze(-1)

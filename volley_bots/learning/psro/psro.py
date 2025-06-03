@@ -139,7 +139,7 @@ class PSROPolicy(object):
 
         # each agent has its own actor
         actors = nn.ModuleList([create_actor_fn() for _ in range(self.agent_spec.n)])
-        # 创建一个 ModuleList，里面有n个actor，目的是初始化n个参数，结构实际上只用到actor[0]，加载不同的参数而已
+
         self.actor = actors[0]
 
         actor_params = [make_functional(actor) for actor in actors]
@@ -690,7 +690,7 @@ def make_critic(
     assert isinstance(reward_spec, (UnboundedTensorSpec, BoundedTensorSpec))
     encoder = make_encoder(
         cfg, state_spec
-    )  # 根据最后一个维度进行MLP，前几个维度会自动flatten
+    )
 
     if centralized:  # centralized
         v_out = nn.Linear(

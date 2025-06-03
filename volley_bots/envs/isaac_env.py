@@ -216,7 +216,7 @@ class IsaacEnv(EnvBase):
         raise NotImplementedError
 
     def _step(self, tensordict: TensorDictBase) -> TensorDictBase:
-        # 在step函数这步把_step输出的这个tensordict放到next里面
+
         for substep in range(1):
             self._pre_sim_step(tensordict)
             self.sim.step(self._should_render(substep))

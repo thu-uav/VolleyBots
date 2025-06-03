@@ -13,14 +13,14 @@ policy_checkpoint_path:
 actor_0_checkpoint_path:
 actor_1_checkpoint_path:
 
-total_frames: 500_000_000
+total_frames: 1_000_000_000
 update_interval: 20
 
 solver_type: fsp
 mean_threshold: 0.9 # 0.9
 std_threshold: 0.02 # 0.02
 min_iter_steps: 50 # 50
-max_iter_steps: 500
+max_iter_steps: 5000
 
 first_id: 0 # 0 or 1
 
@@ -32,7 +32,7 @@ max_population_size: false
 
 save_meta_policy: true
 
-seed: 12345
+seed: 0
 
 
 viewer:
@@ -44,8 +44,8 @@ wandb:
   group: ${task.name}-${algo.name}
   run_name: ${oc.select:..task.name,test}-${oc.select:..algo.name,none}
   job_type: train
-  entity: nics_marl
-  project: omnidrones
+  entity:
+  project:
   mode: online # set to 'disabled' when debugging locally
   run_id:
   monitor_gym: True

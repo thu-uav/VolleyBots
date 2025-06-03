@@ -31,14 +31,14 @@ wandb:
   group: ${task.name}-${algo.name}
   run_name: ${oc.select:..task.name,test}-${oc.select:..algo.name,none}
   job_type: train
-  entity: nics_marl
-  project: omnidrones
+  entity:
+  project:
   mode: online # set to 'disabled' when debugging locally
   run_id:
   monitor_gym: True
   tags:
 
 defaults:
-  - task: Volleyball1v1
+  - task: Volleyball3v3
   - algo: psro
   - _self_

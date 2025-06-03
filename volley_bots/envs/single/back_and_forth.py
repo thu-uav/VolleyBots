@@ -448,7 +448,7 @@ class BackAndForth(IsaacEnv):
         self.drone.set_velocities(self.init_vels[env_ids], env_ids)
 
         if self.has_payload:
-            # TODO@btx0424: 找到更好的方法
+
             payload_z = self.payload_z_dist.sample(env_ids.shape)
             joint_indices = torch.tensor(
                 [self.drone._view._dof_indices["PrismaticJoint"]], device=self.device
@@ -498,7 +498,7 @@ class BackAndForth(IsaacEnv):
         ori = self.envs_positions[self.central_env_idx].detach()
         points = self.target_pos_all[self.central_env_idx].clone() + ori
 
-        points[:, -1] = 0  # 将z坐标设为0，保持在地面
+        points[:, -1] = 0
         points = points.tolist()
 
         colors = [(0, 1, 0, 1)]
@@ -562,7 +562,7 @@ class BackAndForth(IsaacEnv):
             {
                 "agents": {
                     "observation": obs,
-                    "intrinsics": self.drone.intrinsics,  # 传感器内参
+                    "intrinsics": self.drone.intrinsics,
                 },
                 "stats": self.stats,
                 "info": self.info,
@@ -577,25 +577,25 @@ class BackAndForth(IsaacEnv):
         dist_to_anchor = torch.norm(self.rpos, p=2, dim=-1)
         target_pos_before_update = self.target_pos_all.clone()
 
-        # 到底目标点判定条件
+
         # reached_position = ((dist_to_anchor < 0.6)&(torch.norm(self.linear_velocities[..., :2], p=2, dim=-1)<0.4)).squeeze(-1)
         reached_position = (dist_to_anchor < 0.6).squeeze(-1)
-        # 更新计数器：如果在目标位置范围内，则计数器加1；否则重置为0
+
         self.target_time_count_clone = self.target_time_count.clone()
         self.target_time_count_clone[
             reached_position
-        ] += 1  # 满足位置条件的环境递增计数器
+        ] += 1
         self.target_time_count_clone[~reached_position] = (
-            0  # 不满足位置条件的环境重置计数器
+            0
         )
         self.target_time_count = self.target_time_count_clone
 
         reached_target = self.target_time_count >= 5
-        # 得到满足停留时间条件的索引
+
         self.reached_indices = torch.nonzero(reached_target, as_tuple=True)
         self.target_reached_nums[self.reached_indices] += 1
 
-        # 仅在达到了目标的那些索引位置上更新 self.target_pos_all
+
 
         target_pos_all_clone = self.target_pos_all.clone()
         target_pos_all_clone[self.reached_indices] = torch.where(
@@ -607,15 +607,15 @@ class BackAndForth(IsaacEnv):
         )
         self.target_pos_all = target_pos_all_clone
 
-        # 目标点停留奖励
+
         reward_target_stop = 2.5 * (self.target_time_count).unsqueeze(-1)
-        # 基于距离计算奖励
+
         reward_dist_to_anchor = 0.5 / (1.0 + torch.square(1.0 * dist_to_anchor))
 
         # uprightness
         # reward_up = 0.3 * torch.square((self.drone.up[..., 2] + 1) / 2 )
 
-        # 旋转奖励
+
         # spinnage = torch.square(self.drone.vel[..., -1])
         # reward_spin = 1.0 / (1.0 + torch.square(spinnage))
 

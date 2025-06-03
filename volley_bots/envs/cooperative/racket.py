@@ -31,14 +31,14 @@ def equation_solving(par: np.ndarray, target: float) -> List[np.float64]:
     :return: 方程的实根
     """
     root = []
-    # 区间向前一定长度，保证函数能到target点
+
     for i in np.arange(-2, 2, 0.25):
-        left, right = i, i + 0.25  # 在每个[i,i+0.25]小区间内做二分
-        y1, y2 = y3(left, par), y3(right, par)  # 计算区间端点的值
-        if y1 == target:  # y1==0就是解
+        left, right = i, i + 0.25
+        y1, y2 = y3(left, par), y3(right, par)
+        if y1 == target:
             root.append(y1)
-        if (y1 - target) * (y2 - target) < 0:  # 在这区间内有解
-            for j in range(10):  # 10次二分：在这个区间内求解
+        if (y1 - target) * (y2 - target) < 0:
+            for j in range(10):
                 mid = (left + right) / 2
                 if (y3(mid, par) - target) * (y3(right, par) - target) <= 0:
                     left = mid
@@ -65,48 +65,48 @@ def get_ball_traj_without_kd(p00, v00, target_height: float, device, dtype):
     - target_ball_vel: 形状为 (N, 3) 的预测目标速度
     - t: 形状为 (N,) 的预测时间
     """
-    a = -0.5 * 9.81  # 重力加速度
+    a = -0.5 * 9.81
 
-    b = v00[:, 2]  # 取出 z 方向的速度，形状 (N,)
-    # c = target_height - p00[:, 2]  # 形状 (N,)
-    c = -(p00[:, 2] - target_height)  # 形状 (N,)
+    b = v00[:, 2]
+
+    c = -(p00[:, 2] - target_height)
 
     t1 = torch.zeros_like(b)
     t2 = torch.zeros_like(b)
     t = torch.zeros_like(b)
-    valid_mask = (b**2 + 4 * a * c) >= 0  # 仅对可计算的样本进行操作
+    valid_mask = (b**2 + 4 * a * c) >= 0
 
-    if valid_mask.any():  # 确保至少有一个可计算的样本
+    if valid_mask.any():
         sqrt_term = torch.sqrt(b[valid_mask] ** 2 + 4 * a * c[valid_mask])
         t1[valid_mask] = (-b[valid_mask] + sqrt_term) / (2 * a)
         t2[valid_mask] = (-b[valid_mask] - sqrt_term) / (2 * a)
 
-    # 这里加入 t 计算逻辑
+
     t[valid_mask] = torch.where(
-        v00[valid_mask, 2] <= 0,  # 速度方向判断
-        torch.min(t1[valid_mask], t2[valid_mask]),  # v00[2] <= 0 时，取 min
-        torch.max(t1[valid_mask], t2[valid_mask]),  # v00[2] > 0 时，取 max
+        v00[valid_mask, 2] <= 0,
+        torch.min(t1[valid_mask], t2[valid_mask]),
+        torch.max(t1[valid_mask], t2[valid_mask]),
     )
 
-    # 处理 t1 或 t2 只有一个合法值的情况
+
     t[valid_mask] = torch.where(
         (t1[valid_mask] >= 0) & (t2[valid_mask] >= 0),
-        t[valid_mask],  # 如果 t1 和 t2 都有效，保持现有选择
+        t[valid_mask],
         torch.where(
             t1[valid_mask] >= 0, t1[valid_mask], t2[valid_mask]
-        ),  # 否则选有效的时间
+        ),
     )
 
-    # 计算目标位置
+
     x = v00[:, 0] * t + p00[:, 0]
     y = v00[:, 1] * t + p00[:, 1]
 
     target_ball_pose = torch.stack(
         [x, y, torch.full_like(x, target_height)], dim=1
-    )  # 形状 (N, 3)
+    )
     target_ball_vel = torch.stack(
         [v00[:, 0], v00[:, 1], v00[:, 2] - 9.81 * t], dim=1
-    )  # 形状 (N, 3)
+    )
 
     return target_ball_pose, target_ball_vel, t
 
@@ -131,7 +131,7 @@ def get_ball_traj(
     """
 
     a = np.array([0, 0, -9.81])
-    # 求取轨迹
+
     ball_pose = []
     ball_vel = []
     # t = []
@@ -139,7 +139,7 @@ def get_ball_traj(
     ball_vel.append(v00)
     t_inl = 0.0
     # t.append(t_inl)
-    # 根据公式迭代出球在空间的球姿，限制条件为球在指定的高度上方并且速度较小
+
     if kd_est != 0:
         while (ball_pose[-1][2] >= target_height) and (abs(ball_vel[-1][2]) <= 20):
             p = ball_pose[-1] + ball_vel[-1] * ddt + 0.5 * a * ddt**2
@@ -187,9 +187,9 @@ def ball_post_vel_without_kd(ball_target_pose, ball_collision_pose, device, dtyp
     返回：
     - ball_post_v: (N, 3) 碰撞后的速度
     """
-    t = 1.5  # 计算时间
+    t = 1.5
 
-    # 计算速度
+
     del_x = ball_target_pose[:, 0] - ball_collision_pose[:, 0]
     del_y = ball_target_pose[:, 1] - ball_collision_pose[:, 1]
     vx = del_x / t
@@ -198,13 +198,13 @@ def ball_post_vel_without_kd(ball_target_pose, ball_collision_pose, device, dtyp
 
     ball_post_v = torch.stack([vx, vy, vz], dim=1).to(
         device=device, dtype=dtype
-    )  # 形状 (N, 3)
+    )
 
     return ball_post_v
 
 
 def ball_post_vel(kd, ball_target_pose, ball_collision_pose):
-    #  降维
+
     ball_hor_move = np.array(
         [
             ball_target_pose[0] - ball_collision_pose[0],
@@ -219,7 +219,7 @@ def ball_post_vel(kd, ball_target_pose, ball_collision_pose):
     ddt = 0.001
     ball_post_v = np.array([0, 0, 0])
 
-    # 求取轨迹
+
     ball_pose = []
     ball_vel = []
     # t = []
@@ -282,14 +282,14 @@ def get_uav_collision_data_without_kd(
             ]
         ]
     ).T.to(device=device, dtype=dtype)
-    N = ball_pose.shape[0]  # 获取环境数
+    N = ball_pose.shape[0]
     uav_data_planning = torch.zeros((N, 9), dtype=dtype, device=device)
     uav_data_planning[:, 0:3] = ball_pose
     uav_data_planning[:, 3:6] = (
         1 / (1 + beta) * (beta * ball_vel_per_collision + ball_vel_post_collision)
     )
 
-    # 无人机法线朝向
+
     ball_val_delta = ball_vel_per_collision - ball_vel_post_collision  # (N, 3)
     n_des = -ball_val_delta / torch.norm(ball_val_delta, dim=-1, keepdim=True)  # (N, 3)
 
@@ -306,25 +306,25 @@ def get_uav_collision_data_without_kd(
 
     return uav_data_planning
 
-    # # 无人机法线朝向
+
     # ball_val_delta = (ball_vel_per_collision - ball_vel_post_collision) # (N, 3)
     # n_des = -ball_val_delta / torch.norm(ball_val_delta, dim=-1, keepdim=True) # (N, 3)
     # # print("ball_val_delta",ball_val_delta.shape)
     # # print("n_des",n_des.shape)
     # f = f.expand(-1, N) # (15, N)
-    # a_f = torch.matmul(f, n_des)  # 计算加速度 (15, 3)
+
 
     # a_cal = torch.norm(a_f + torch.tensor([0., 0., -9.81], dtype=dtype, device=device), dim=-1) # (15,)
-    # min_idx = torch.argmin(a_cal, dim=0)  # 找到最小加速度索引
+
     # a_real = a_f[min_idx] + torch.tensor([0., 0., -9.81], dtype=dtype, device=device)  # (N, 3)
 
-    # uav_data_planning[:, 6:9] = a_real  # (N, 3) 赋值给 (N, 9)
 
-    # 无人机法线朝向
+
+
     # ball_val_delta = (ball_vel_per_collision - ball_vel_post_collision)
     # n_des = np.array([-ball_val_delta / np.linalg.norm(ball_val_delta)])
     # # uav_data_planning[3:6] = np.dot(v_mid,n_des.T)*n_des
-    # # print(f"法线：{n_des}")
+
     # # n_des = (sinpcosr,-sinr,cospcosr)
     # a_f = np.dot(f,n_des)
     # a_real = np.array([0.,0.,0.])
@@ -387,11 +387,11 @@ def get_uav_collision_data(
     uav_data_planning[3:6] = (
         1 / (1 + beta) * (beta * ball_vel_per_collision + ball_vel_post_collision)
     )
-    # 无人机法线朝向
+
     ball_val_delta = ball_vel_per_collision - ball_vel_post_collision
     n_des = np.array([-ball_val_delta / np.linalg.norm(ball_val_delta)])
     # uav_data_planning[3:6] = np.dot(v_mid,n_des.T)*n_des
-    # print(f"法线：{n_des}")
+
     # n_des = (sinpcosr,-sinr,cospcosr)
     a_f = np.dot(f, n_des)
     a_real = np.array([0.0, 0.0, 0.0])
@@ -453,7 +453,7 @@ def f_x_uav(x, dt):
     return F @ x
 
 
-# 动捕观测矩阵
+
 def h_cv(x):
     return x[[0, 1, 2]]
 
@@ -471,11 +471,11 @@ def get_ukf_data(ukf, msg):
 def make_ukf(dt: float):
     sigmas = MerweScaledSigmaPoints(6, alpha=0.0001, beta=2.0, kappa=-3.0)
     ukf_p = UKF(dim_x=6, dim_z=3, fx=f_x, hx=h_cv, dt=dt, points=sigmas)
-    # 初始化UKF状态和协方差矩阵
+
     ukf_p.x = np.array([0.0, 0.0, 1.5, 0.0, 0.0, 7.0])
-    # 假设测量误差为0.005m
+
     ukf_p.R = np.diag([0.005**2, 0.005**2, 0.005**2])
-    # 过程噪声————只作用于速度项
+
     ukf_p.Q[0:3, 0:3] = np.diag(
         [0.0, 0.0, 0.0]
     )  # )Q_discrete_white_noise(3, dt=dt, var=0.)
@@ -488,11 +488,11 @@ def make_ukf(dt: float):
 def make_ukf_uav(dt: float):
     sigmas = MerweScaledSigmaPoints(6, alpha=0.0001, beta=2.0, kappa=-3.0)
     ukf_p = UKF(dim_x=6, dim_z=3, fx=f_x_uav, hx=h_cv, dt=dt, points=sigmas)
-    # 初始化UKF状态和协方差矩阵
+
     ukf_p.x = np.array([0.0, 0.0, 0.9, 0.0, 0.0, 0.1])
-    # 假设测量误差为0.005m
+
     ukf_p.R = np.diag([0.005**2, 0.005**2, 0.005**2])
-    # 过程噪声————只作用于速度项
+
     ukf_p.Q[0:3, 0:3] = np.diag(
         [0.0, 0.0, 0.0]
     )  # Q_discrete_white_noise(3, dt=dt, var=0.)
@@ -515,12 +515,12 @@ def get_kd_est(
     ukf_v_pre_norm = np.linalg.norm(ukf_v_pre)
     e_ball_ukf_post = (
         0.5 * ukf_v_post_norm**2 + 9.81 * ukf_height_post
-    )  # 计算平均机械能
-    e_ball_ukf_pre = 0.5 * ukf_v_pre_norm**2 + 9.81 * ukf_height_pre  # 计算平均机械能
+    )
+    e_ball_ukf_pre = 0.5 * ukf_v_pre_norm**2 + 9.81 * ukf_height_pre
     v_delta = (0.5 * (ukf_v_post_norm + ukf_v_pre_norm)) ** 3
-    # 获取kd测量值
+
     kd_cal = np.abs((e_ball_ukf_post - e_ball_ukf_pre) / dt / v_delta)
-    # 调用RLS估计kd去除噪声干扰
+
     rd = np.var(np.array([ukf_v_post_norm, ukf_v_pre_norm])) / v_delta
     cd = Pds[-1] / (Pds[-1] + rd)
     kd = Kds[-1] + cd * (kd_cal - Kds[-1])

@@ -1,7 +1,6 @@
-total_frames=1_000_000_000  # 1_000_000_000 for results, 500_000_000 for debug
+total_frames=1_000_000_000
 reward_shaping=true  # true, false
 algorithm="mappo"  # mappo, maddpg, happo, mat, qmix
-wandb_project="omnidrones"
 seed=0  # 0, 1, 2
 
 CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
@@ -19,5 +18,4 @@ CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
     algo=${algorithm} \
     task.time_encoding=false \
     seed=${seed} \
-    wandb.project=${wandb_project} \
-    # wandb.mode=disabled \
+    wandb.mode=disabled \

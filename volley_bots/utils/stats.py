@@ -5,7 +5,7 @@ import torch
 from PIL import Image
 
 
-# 好像有一些微妙的bug
+
 class RangeIntegerTracker:
     def __init__(self, low: int, high: int) -> None:
         assert high - low > 0
@@ -98,7 +98,7 @@ def _get_first_episode_process_and_save_func(low: int, high: int):
     return process_func, save_func
 
 
-# 避免不同的script中分别维护一遍
+
 
 
 def episode_average_process_func(x: torch.Tensor) -> torch.Tensor:

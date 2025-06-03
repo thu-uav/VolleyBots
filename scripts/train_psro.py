@@ -461,7 +461,7 @@ def train(
             converged_indicator.reset(policy.current_player_id)
             cnt_update += 1
 
-            if share_population:  # 双方共享策略池：每个population都有更新的策略
+            if share_population:
                 if (
                     len(policy.population_0) == 1 and len(policy.population_1) == 1
                 ):  # initial policy is random policy and is replaced by trained policy
@@ -498,10 +498,10 @@ def train(
                         **meta_policy_dict,
                     )
 
-            else:  # 双方独立策略池
+            else:
                 if (
                     cnt_update % 2 == 0
-                ):  # 双方都有更新的策略，才重新计算 payoffs 和 meta-policy
+                ):
                     if (
                         len(policy.population_0) == 1 and len(policy.population_1) == 1
                     ):  # initial policy is random policy and is replaced by trained policy
@@ -602,13 +602,6 @@ def main(cfg: DictConfig):
     base_env = env_class(cfg, headless=cfg.headless)
 
     def log(info):
-        if cfg.wandb.get("mode", "disabled") != "online":
-            tmp = {
-                k: v
-                for k, v in info.items()
-                if k in ("train/stats.actor_0_wins", "train/stats.actor_1_wins")
-            }
-            print(OmegaConf.to_yaml(tmp))
         run.log(info)
 
     transforms = get_transforms(cfg, base_env, log)

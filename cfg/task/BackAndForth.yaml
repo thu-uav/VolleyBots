@@ -17,7 +17,7 @@ court:  # standard volleyball court: 18m x 9m, net: 2.43m (man) x 1m
   W_NET: 1.0
 
 
-drone_model: Crazyflie
+drone_model: Iris
 force_sensor: false
 time_encoding: true
 

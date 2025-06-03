@@ -11,7 +11,7 @@ gamma: 0.995 # 0.99
 max_grad_norm: 10.0
 normalize_advantages: True
 
-share_actor: true
+share_actor: True
 critic_input: obs # `obs` or `state`
 
 actor:

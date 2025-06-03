@@ -2,6 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="volley_bots",
+    version="0.1.0",
     author="volleybots",
     keywords=["robotics", "rl"],
     packages=find_packages("."),
@@ -13,13 +14,13 @@ setup(
         "imageio",
         "plotly",
         "einops",
-        "av",  # for moviepy
+        "av",
         "pandas",
-        # "multielo @ git+https://github.com/djcunningham0/multielo.git@v0.4.0",
         "h5py",
         "filterpy",
         "usd-core==23.2",
-        # "torchinfo",
-        # "torchopt"
+        "numpy==1.23.5",
+        "urllib3==1.26.18",
+        "seaborn"
     ],
 )

@@ -23,7 +23,7 @@ std_threshold: 0.02 # 0.02
 min_iter_steps: 50 # 50
 max_iter_steps: 500
 
-seed: 12345
+seed: 0
 
 viewer:
   resolution: [960, 720]
@@ -34,8 +34,8 @@ wandb:
   group: ${task.name}-${algo.name}
   run_name: ${oc.select:..task.name,test}-${oc.select:..algo.name,none}
   job_type: train
-  entity: nics_marl
-  project: omnidrones
+  entity:
+  project:
   mode: online # set to 'disabled' when debugging locally
   run_id:
   monitor_gym: True

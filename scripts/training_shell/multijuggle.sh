@@ -1,5 +1,9 @@
+total_frames=1_000_000_000
+algorithm="mappo"  # mappo, maddpg, happo, mat, qmix
+seed=0  # 0, 1, 2
+
 CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
-    total_frames=1_000_000_000 \
+    total_frames=${total_frames} \
     task=MultiJuggleVolleyball \
     task.drone_model=Iris \
     task.env.num_envs=4096 \
@@ -7,10 +11,9 @@ CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
     task.ball_radius=0.03 \
     eval_interval=50 \
     save_interval=50 \
-    algo=mappo \
-    # wandb.mode=disabled # debug
-    #algo.share_actor=true \
-    #algo.critic_input="obs" \
-    #task.time_encoding=false \
+    algo=${algorithm} \
+    seed=${seed} \
+    wandb.mode=disabled \
+
 
     

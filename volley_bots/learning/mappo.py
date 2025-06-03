@@ -127,7 +127,7 @@ class MAPPOPolicy(object):
             actors = nn.ModuleList(
                 [create_actor_fn() for _ in range(self.agent_spec.n)]
             )
-            # 创建一个 ModuleList，里面有n个actor，目的是初始化n个参数，结构实际上只用到actor[0]，加载不同的参数而已
+
             self.actor = actors[0]
             stacked_params = torch.stack([make_functional(actor) for actor in actors])
             self.actor_params = TensorDictParams(stacked_params.to_tensordict())
@@ -186,7 +186,7 @@ class MAPPOPolicy(object):
                 out_keys=self.critic_out_keys,
             ).to(self.device)
             self.value_func = self.critic
-            # self.value_func = vmap(self.critic, in_dims=1, out_dims=1) # 忽略 agents 那维，最后再拼起来
+
             # import pdb; pdb.set_trace()
 
         self.critic_opt = torch.optim.Adam(
@@ -660,7 +660,7 @@ def make_critic(
     assert isinstance(reward_spec, (UnboundedTensorSpec, BoundedTensorSpec))
     encoder = make_encoder(
         cfg, state_spec
-    )  # 根据最后一个维度进行MLP，前几个维度会自动flatten
+    )
 
     if cfg.get("rnn", None):
         rnn_cls = {"gru": GRU}[cfg.rnn.cls.lower()]
