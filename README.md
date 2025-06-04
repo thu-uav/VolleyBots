@@ -15,7 +15,13 @@ This repository is the official implementation of the paper "VolleyBots: A Testb
 
 Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi Wang, Wenhao Tang, Feng Gao, Wenbo Ding, Xinlei Chen, Yu Wang+
 
-[Overview](#-overview) | [Installation](#-installation) | [Usage](#-usage) | [Checkpoints](#-checkpoints) | [Experimental Setup](#-experimental-setup) | [Citation](#-citation) | [Acknowledgement](#-acknowledgement)
+[News](#-news) | [Overview](#-overview) | [Installation](#-installation) | [Usage](#-usage) | [Checkpoints](#-checkpoints) | [Experimental Setup](#-experimental-setup) | [Citation](#-citation) | [Acknowledgement](#-acknowledgement)
+
+## 📣 News
+
+🔥 **[2025.06.03] (v0.1.0)** Add a full 6 vs 6 volleyball task, new RL & MARL baselines, a hierarchical policy for the 3 vs 3 task, and extra reproducible training/evaluation shells and checkpoints.
+
+**[2025.02.09] (v0.0.0)** Initial release with 8 tasks, 8 baselines, and reproducible training/evaluation shells & checkpoints.
 
 ## 📌 Overview
 
