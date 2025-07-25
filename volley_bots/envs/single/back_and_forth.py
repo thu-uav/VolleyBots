@@ -33,13 +33,6 @@ from volley_bots.utils.torch import euler_to_quaternion, normalize, quat_axis
 from volley_bots.views import ArticulationView, RigidPrimView
 
 _COLOR_T = Tuple[float, float, float, float]
-x = 0
-
-
-def my_function():
-    global x
-    x += 1
-
 
 def _draw_net(
     W: float,
@@ -117,7 +110,6 @@ def _draw_lines_args_merger(*args):
 
 
 def draw_court(W: float, L: float, H_NET: float, W_NET: float):
-
     return _draw_lines_args_merger(_draw_net(W, H_NET, W_NET), _draw_board(W, L))
 
 
@@ -129,29 +121,6 @@ def calculate_penalty_drone_abs_z(drone_rpos: torch.Tensor) -> torch.Tensor:
     return tmp * 0.15
 
 
-def attach_payload(parent_path):
-    import omni.physx.scripts.utils as script_utils
-    from omni.isaac.core import objects
-    from pxr import UsdPhysics
-
-    payload_prim = objects.DynamicCuboid(
-        prim_path=parent_path + "/payload",
-        scale=torch.tensor([0.1, 0.1, 0.15]),
-        mass=0.0001,
-    ).prim
-
-    parent_prim = prim_utils.get_prim_at_path(parent_path + "/base_link")
-    stage = prim_utils.get_current_stage()
-
-    joint = script_utils.createJoint(stage, "Prismatic", payload_prim, parent_prim)
-    UsdPhysics.DriveAPI.Apply(joint, "linear")
-    joint.GetAttribute("physics:lowerLimit").Set(-0.15)
-    joint.GetAttribute("physics:upperLimit").Set(0.15)
-    joint.GetAttribute("physics:axis").Set("Z")
-    joint.GetAttribute("drive:linear:physics:damping").Set(10.0)
-    joint.GetAttribute("drive:linear:physics:stiffness").Set(10000.0)
-
-
 class BackAndForth(IsaacEnv):
     def __init__(self, cfg, headless):
 
@@ -160,7 +129,6 @@ class BackAndForth(IsaacEnv):
         self.H_NET: float = cfg.task.court.H_NET
         self.W_NET: float = cfg.task.court.W_NET
         self.randomization = cfg.task.get("randomization", {})
-        self.has_payload = "payload" in self.randomization.keys()
         self.throttles_in_obs = cfg.task.throttles_in_obs
         self.use_ctbr = True if cfg.task.action_transform == "PIDrate" else False
         super().__init__(cfg, headless)
@@ -182,58 +150,22 @@ class BackAndForth(IsaacEnv):
         self.drone.initialize()
         if "drone" in self.randomization:
             self.drone.setup_randomization(self.randomization["drone"])
-        if "payload" in self.randomization:
-            payload_cfg = self.randomization["payload"]
 
-            self.payload_z_dist = D.Uniform(
-                torch.tensor([payload_cfg["z"][0]], device=self.device),
-                torch.tensor([payload_cfg["z"][1]], device=self.device),
-            )
-            self.payload_mass_dist = D.Uniform(
-                torch.tensor([payload_cfg["mass"][0]], device=self.device),
-                torch.tensor([payload_cfg["mass"][1]], device=self.device),
-            )
-            self.payload = RigidPrimView(
-                f"/World/envs/env_*/{self.drone.name}_*/payload",
-                reset_xform_properties=False,
-                shape=(-1, self.drone.n),
-            )
-            self.payload.initialize()
-
-        self.init_poses = self.drone.get_world_poses(clone=True)
         self.init_vels = torch.zeros_like(self.drone.get_velocities())
-        # self.anchor = torch.tensor(cfg.task.anchor, device=self.device)
-        # self.anchor_1 = torch.tensor(cfg.task.anchor_1, device=self.device)
-
-        self.init_pos_dist = D.Uniform(
-            torch.tensor([-2.5, -2.5, 1.0], device=self.device),
-            torch.tensor([2.5, 2.5, 2.5], device=self.device),
-        )
         self.init_rpy_dist = D.Uniform(
             torch.tensor([-0.1, -0.1, 0.0], device=self.device) * torch.pi,
             torch.tensor([0.1, 0.1, 2.0], device=self.device) * torch.pi,
         )
-        self.target_rpy_dist = D.Uniform(
-            torch.tensor([0.0, 0.0, 0.0], device=self.device) * torch.pi,
-            torch.tensor([0.0, 0.0, 2.0], device=self.device) * torch.pi,
-        )
-
-        # self.target_heading = torch.zeros(self.num_envs, 1, 3, device=self.device)
-        self.alpha = 0.8
 
         self.start_pos = torch.tensor(cfg.task.anchor, device=self.device)
         self.end_pos = torch.tensor(cfg.task.anchor_1, device=self.device)
 
         self.target_time_count = torch.zeros(self.num_envs, device=self.device)
-
         self.target_pos_all = self.end_pos.expand(self.num_envs, 1, 3)
-
         self.target_reached_nums = torch.zeros(self.num_envs, 1, device=self.device)
 
     def _design_scene(self):
         import omni.isaac.core.utils.prims as prim_utils
-
-        import volley_bots.utils.kit as kit_utils
 
         drone_model = MultirotorBase.REGISTRY[self.cfg.task.drone_model]
         cfg = drone_model.cfg_cls(force_sensor=self.cfg.task.force_sensor)
@@ -264,8 +196,7 @@ class BackAndForth(IsaacEnv):
             )
 
         drone_prim = self.drone.spawn(translations=[(0.0, 0.0, 2.0)])[0]
-        if self.has_payload:
-            attach_payload(drone_prim.GetPath().pathString)
+
         return ["/World/defaultGroundPlane"]
 
     def _set_specs(self):
@@ -348,28 +279,23 @@ class BackAndForth(IsaacEnv):
         stats_spec = (
             CompositeSpec(
                 {
-                    "return": UnboundedContinuousTensorSpec(1),
                     "episode_len": UnboundedContinuousTensorSpec(1),
+
                     "dist_to_anchor": UnboundedContinuousTensorSpec(1),
-                    # "heading_alignment": UnboundedContinuousTensorSpec(1),
                     "uprightness": UnboundedContinuousTensorSpec(1),
                     "action_smoothness": UnboundedContinuousTensorSpec(1),
                     "linear_velocity": UnboundedContinuousTensorSpec(1),
                     "max_linear_velocity": UnboundedContinuousTensorSpec(1),
                     "z_abs_linear_vel": UnboundedContinuousTensorSpec(1),
                     "drone_z": UnboundedContinuousTensorSpec(1),
-                    # "reward_velocity": UnboundedContinuousTensorSpec(1),
-                    # "penalty_drone_abs_z": UnboundedContinuousTensorSpec(1),
-                    # "reward_effort":  UnboundedContinuousTensorSpec(1),
+                    
+                    "return": UnboundedContinuousTensorSpec(1),
                     "reward_target_stop": UnboundedContinuousTensorSpec(1),
-                    # "reward_spin" : UnboundedContinuousTensorSpec(1),
-                    # "reward_up" : UnboundedContinuousTensorSpec(1),
-                    # "reward_pose_all": UnboundedContinuousTensorSpec(1),
                     "reward_dist_to_anchor": UnboundedContinuousTensorSpec(1),
+                    "penalty_drone_misbehave": UnboundedContinuousTensorSpec(1),
+                    
                     "target_reached_nums": UnboundedContinuousTensorSpec(1),
                     "done_drone_misbehave": UnboundedContinuousTensorSpec(1),
-                    "penalty_drone_misbehave": UnboundedContinuousTensorSpec(1),
-                    "penalty_dist_to_anchor": UnboundedContinuousTensorSpec(1),
                     "drone_too_low": UnboundedContinuousTensorSpec(1),
                     "drone_too_high": UnboundedContinuousTensorSpec(1),
                     "drone_too_remote": UnboundedContinuousTensorSpec(1),
@@ -447,34 +373,8 @@ class BackAndForth(IsaacEnv):
 
         self.drone.set_velocities(self.init_vels[env_ids], env_ids)
 
-        if self.has_payload:
-
-            payload_z = self.payload_z_dist.sample(env_ids.shape)
-            joint_indices = torch.tensor(
-                [self.drone._view._dof_indices["PrismaticJoint"]], device=self.device
-            )
-
-            self.drone._view.set_joint_positions(
-                payload_z, env_indices=env_ids, joint_indices=joint_indices
-            )
-            self.drone._view.set_joint_position_targets(
-                payload_z, env_indices=env_ids, joint_indices=joint_indices
-            )
-            self.drone._view.set_joint_velocities(
-                torch.zeros(len(env_ids), 1, device=self.device),
-                env_indices=env_ids,
-                joint_indices=joint_indices,
-            )
-
-            payload_mass = (
-                self.payload_mass_dist.sample(env_ids.shape + (1,))
-                * self.drone.masses[env_ids]
-            )
-            self.payload.set_masses(payload_mass, env_indices=env_ids)
-
         if (env_ids == self.central_env_idx).any() and self._should_render(0):
             self.draw.clear_lines()
-            # self.debug_draw_region()
             self.debug_draw_turn()
             point_list_1, point_list_2, colors, sizes = draw_court(
                 self.W, self.L, self.H_NET, self.W_NET
@@ -486,10 +386,6 @@ class BackAndForth(IsaacEnv):
                 _carb_float3_add(p, self.central_env_pos) for p in point_list_2
             ]
             self.draw.draw_lines(point_list_1, point_list_2, colors, sizes)
-
-        target_rpy = self.target_rpy_dist.sample((*env_ids.shape, 1))
-        target_rot = euler_to_quaternion(target_rpy)
-        # self.target_heading[env_ids] = quat_axis(target_rot.squeeze(1), 0).unsqueeze(1)
 
         self.stats[env_ids] = 0.0
 
@@ -575,31 +471,22 @@ class BackAndForth(IsaacEnv):
         self.linear_velocities = self.vel[:, :, :3]
         self.rpos = self.target_pos_all - self.root_state[..., :3]
         dist_to_anchor = torch.norm(self.rpos, p=2, dim=-1)
-        target_pos_before_update = self.target_pos_all.clone()
 
+        is_near = (dist_to_anchor < 0.6).squeeze(-1)
 
-        # reached_position = ((dist_to_anchor < 0.6)&(torch.norm(self.linear_velocities[..., :2], p=2, dim=-1)<0.4)).squeeze(-1)
-        reached_position = (dist_to_anchor < 0.6).squeeze(-1)
-
-        self.target_time_count_clone = self.target_time_count.clone()
-        self.target_time_count_clone[
-            reached_position
-        ] += 1
-        self.target_time_count_clone[~reached_position] = (
-            0
+        self.target_time_count = torch.where(
+            is_near,
+            self.target_time_count + 1,
+            0,
         )
-        self.target_time_count = self.target_time_count_clone
 
-        reached_target = self.target_time_count >= 5
-
-        self.reached_indices = torch.nonzero(reached_target, as_tuple=True)
-        self.target_reached_nums[self.reached_indices] += 1
-
-
+        is_reach = (self.target_time_count >= 5)
+        reached_indices = torch.nonzero(is_reach, as_tuple=True)
+        self.target_reached_nums[reached_indices] += 1
 
         target_pos_all_clone = self.target_pos_all.clone()
-        target_pos_all_clone[self.reached_indices] = torch.where(
-            (self.target_pos_all[self.reached_indices] == self.end_pos).all(
+        target_pos_all_clone[reached_indices] = torch.where(
+            (self.target_pos_all[reached_indices] == self.end_pos).all(
                 dim=-1, keepdim=True
             ),
             self.start_pos,
@@ -607,55 +494,25 @@ class BackAndForth(IsaacEnv):
         )
         self.target_pos_all = target_pos_all_clone
 
+        # reward
 
-        reward_target_stop = 2.5 * (self.target_time_count).unsqueeze(-1)
+        reward_target_stop = 2.5 * self.target_time_count.unsqueeze(-1)
 
         reward_dist_to_anchor = 0.5 / (1.0 + torch.square(1.0 * dist_to_anchor))
-
-        # uprightness
-        # reward_up = 0.3 * torch.square((self.drone.up[..., 2] + 1) / 2 )
-
-
-        # spinnage = torch.square(self.drone.vel[..., -1])
-        # reward_spin = 1.0 / (1.0 + torch.square(spinnage))
-
-        # reward_effort = self.reward_effort_weight * torch.exp(-self.effort)
-        # reward_action_smoothness = self.reward_action_smoothness_weight * torch.exp(-self.drone.throttle_difference)
-
-        # reward_velocity
-        # reward_velocity = self.reward_velocity_factor * torch.norm(self.linear_velocities[..., :2], p=2, dim=-1)
-
-        # penalty_drone_abs_z = calculate_penalty_drone_abs_z(self.rpos)
-
-        _dist_coeff = 0.01
-        penalty_dist_to_anchor = _dist_coeff * (
-            dist_to_anchor - self.anchor_radius
-        ).clamp(
-            min=0
-        )  # individual, sparse, (E, 1)
-
-        drone_too_low = self.drone.pos[..., 2] < 0.4
-        drone_too_high = self.drone.pos[..., 2] > 5.0
-        drone_too_remote = dist_to_anchor > 7.5
-        drone_misbehave = drone_too_low | drone_too_high | drone_too_remote
-        penalty_drone_misbehave = drone_misbehave * 10.0
-
-        # reward_pose_all = (reward_dist_to_anchor + reward_dist_to_anchor * (reward_up + reward_spin) + reward_effort) * 0.015 * (70-self.target_time_count.view(-1, 1))
-
         reward_dist_to_anchor = (
             reward_dist_to_anchor * 0.02 * (50 - self.target_time_count.view(-1, 1))
         )
+
+        drone_too_low = (self.drone.pos[..., 2] < 0.4)
+        drone_too_high = (self.drone.pos[..., 2] > 5.0)
+        drone_too_remote = (dist_to_anchor > 7.5)
+        drone_misbehave = (drone_too_low | drone_too_high | drone_too_remote)
+        penalty_drone_misbehave = drone_misbehave * 10.0
 
         reward = (
             reward_dist_to_anchor
             + reward_target_stop
             - penalty_drone_misbehave
-            # - penalty_dist_to_anchor
-            # + reward_effort
-            # + reward_up
-            # - penalty_drone_abs_z
-            # + reward_action_smoothness  # 0
-            # + reward_velocity  # 0
         )
 
         terminated = drone_misbehave
@@ -663,7 +520,7 @@ class BackAndForth(IsaacEnv):
 
         done = terminated | truncated
 
-        if self._should_render(0) and reached_target[self.central_env_idx].any():
+        if self._should_render(0) and is_reach[self.central_env_idx].any():
             self.debug_draw_turn()
 
         self.stats["done_drone_misbehave"][:] = drone_misbehave.float()
@@ -674,29 +531,16 @@ class BackAndForth(IsaacEnv):
         self.stats["reward_dist_to_anchor"].add_(
             reward_dist_to_anchor.mean(dim=-1, keepdim=True)
         )
-        # self.stats["reward_up"].add_(reward_up.mean(dim=-1, keepdim=True))
-        # self.stats["reward_spin"].add_(reward_spin)
-        # self.stats["reward_pose_all"].add_(reward_pose_all)
-        # self.stats["reward_effort"].add_(reward_effort.mean(dim=-1, keepdim=True))
-        # self.stats["reward_velocity"].add_(reward_velocity.mean(dim=-1, keepdim=True))
         self.stats["reward_target_stop"].add_(
             reward_target_stop.mean(dim=-1, keepdim=True)
         )
-        # self.stats["penalty_drone_abs_z"].add_(penalty_drone_abs_z.mean(dim=-1, keepdim=True))
         self.stats["penalty_drone_misbehave"].add_(
             penalty_drone_misbehave.mean(dim=-1, keepdim=True)
         )
-        self.stats["penalty_dist_to_anchor"].add_(
-            penalty_dist_to_anchor.mean(dim=-1, keepdim=True)
-        )
-        # self.stats["heading_alignment"].add_(heading_alignment)
-        # self.stats["uprightness"].add_(self.root_state[..., 18])
-        # self.stats["action_smoothness"].add_(-self.drone.throttle_difference)
         self.stats["return"] += reward
         self.stats["episode_len"][:] = self.progress_buf.unsqueeze(1)
 
         speed_magnitude = torch.norm(self.linear_velocities, dim=-1)
-        # self.stats["linear_velocity"][:] = speed_magnitude
         self.stats["max_linear_velocity"] = speed_magnitude.max(dim=0).values.expand(
             speed_magnitude.shape
         )
@@ -706,7 +550,6 @@ class BackAndForth(IsaacEnv):
         self.update_mean_stats("linear_velocity", speed_magnitude, "episode_len")
         self.update_mean_stats("dist_to_anchor", dist_to_anchor, "episode_len")
         self.update_mean_stats("drone_z", self.drone.pos[..., 2], "episode_len")
-        # self.update_mean_stats("heading_alignment", heading_alignment, "episode_len")
         self.update_mean_stats("uprightness", self.root_state[..., 18], "episode_len")
         self.update_mean_stats(
             "action_smoothness", -self.drone.throttle_difference, "episode_len"
