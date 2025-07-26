@@ -160,7 +160,7 @@ class BackAndForth(IsaacEnv):
         self.start_pos = torch.tensor(cfg.task.anchor, device=self.device)
         self.end_pos = torch.tensor(cfg.task.anchor_1, device=self.device)
 
-        self.target_time_count = torch.zeros(self.num_envs, device=self.device)
+        # self.target_time_count = torch.zeros(self.num_envs, device=self.device)
         self.target_pos_all = self.end_pos.expand(self.num_envs, 1, 3)
         self.target_reached_nums = torch.zeros(self.num_envs, 1, device=self.device)
 
@@ -290,7 +290,7 @@ class BackAndForth(IsaacEnv):
                     "drone_z": UnboundedContinuousTensorSpec(1),
                     
                     "return": UnboundedContinuousTensorSpec(1),
-                    "reward_target_stop": UnboundedContinuousTensorSpec(1),
+                    "reward_reach_target": UnboundedContinuousTensorSpec(1),
                     "reward_dist_to_anchor": UnboundedContinuousTensorSpec(1),
                     "penalty_drone_misbehave": UnboundedContinuousTensorSpec(1),
                     
@@ -359,7 +359,7 @@ class BackAndForth(IsaacEnv):
 
     def _reset_idx(self, env_ids: torch.Tensor):
         self.drone._reset_idx(env_ids, self.training)
-        self.target_time_count[env_ids] = 0
+        # self.target_time_count[env_ids] = 0
         self.target_reached_nums[env_ids] = 0
         self.target_pos_all[env_ids] = self.end_pos
         pos = self.start_pos.expand(env_ids.shape[0], 1, -1)
@@ -472,16 +472,16 @@ class BackAndForth(IsaacEnv):
         self.rpos = self.target_pos_all - self.root_state[..., :3]
         dist_to_anchor = torch.norm(self.rpos, p=2, dim=-1)
 
-        is_near = (dist_to_anchor < 0.6).squeeze(-1)
+        is_near = (dist_to_anchor < 0.6).squeeze(-1) # (E,)
 
-        self.target_time_count = torch.where(
-            is_near,
-            self.target_time_count + 1,
-            0,
-        )
+        # self.target_time_count = torch.where(
+        #     is_near,
+        #     self.target_time_count + 1,
+        #     0,
+        # )
 
-        is_reach = (self.target_time_count >= 5)
-        reached_indices = torch.nonzero(is_reach, as_tuple=True)
+        # is_reach = (self.target_time_count >= 5)
+        reached_indices = torch.nonzero(is_near, as_tuple=True)
         self.target_reached_nums[reached_indices] += 1
 
         target_pos_all_clone = self.target_pos_all.clone()
@@ -496,22 +496,22 @@ class BackAndForth(IsaacEnv):
 
         # reward
 
-        reward_target_stop = 2.5 * self.target_time_count.unsqueeze(-1)
+        reward_reach_target = 20.0 * is_near.unsqueeze(-1)
 
-        reward_dist_to_anchor = 0.5 / (1.0 + torch.square(1.0 * dist_to_anchor))
-        reward_dist_to_anchor = (
-            reward_dist_to_anchor * 0.02 * (50 - self.target_time_count.view(-1, 1))
-        )
+        reward_dist_to_anchor = 0.05 / (1.0 + torch.square(1.0 * dist_to_anchor))
+        # reward_dist_to_anchor = (
+        #     reward_dist_to_anchor * 0.02 * (50 - self.target_time_count.view(-1, 1))
+        # )
 
         drone_too_low = (self.drone.pos[..., 2] < 0.4)
         drone_too_high = (self.drone.pos[..., 2] > 5.0)
         drone_too_remote = (dist_to_anchor > 7.5)
         drone_misbehave = (drone_too_low | drone_too_high | drone_too_remote)
-        penalty_drone_misbehave = drone_misbehave * 10.0
+        penalty_drone_misbehave = 10.0 * drone_misbehave
 
         reward = (
             reward_dist_to_anchor
-            + reward_target_stop
+            + reward_reach_target
             - penalty_drone_misbehave
         )
 
@@ -520,7 +520,7 @@ class BackAndForth(IsaacEnv):
 
         done = terminated | truncated
 
-        if self._should_render(0) and is_reach[self.central_env_idx].any():
+        if self._should_render(0) and is_near[self.central_env_idx].any():
             self.debug_draw_turn()
 
         self.stats["done_drone_misbehave"][:] = drone_misbehave.float()
@@ -528,16 +528,11 @@ class BackAndForth(IsaacEnv):
         self.stats["drone_too_high"][:] = drone_too_high.float()
         self.stats["drone_too_remote"][:] = drone_too_remote.float()
 
-        self.stats["reward_dist_to_anchor"].add_(
-            reward_dist_to_anchor.mean(dim=-1, keepdim=True)
-        )
-        self.stats["reward_target_stop"].add_(
-            reward_target_stop.mean(dim=-1, keepdim=True)
-        )
-        self.stats["penalty_drone_misbehave"].add_(
-            penalty_drone_misbehave.mean(dim=-1, keepdim=True)
-        )
+        self.stats["reward_dist_to_anchor"] += reward_dist_to_anchor
+        self.stats["reward_reach_target"] += reward_reach_target
+        self.stats["penalty_drone_misbehave"] += penalty_drone_misbehave
         self.stats["return"] += reward
+        
         self.stats["episode_len"][:] = self.progress_buf.unsqueeze(1)
 
         speed_magnitude = torch.norm(self.linear_velocities, dim=-1)

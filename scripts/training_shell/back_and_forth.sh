@@ -1,5 +1,5 @@
 total_frames=500_000_000
-algorithm="mappo"  # mappo, maddpg, td3, sac, dqn
+algorithm="td3"  # mappo, maddpg, td3, sac, dqn
 action_transform=""  # PIDrate, null
 throttles_in_obs=true # true, false
 seed=0  # 0, 1, 2
@@ -18,4 +18,7 @@ CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
     task.action_transform=${action_transform}\
     task.throttles_in_obs=${throttles_in_obs}\
     seed=${seed} \
-    wandb.mode=disabled \
+    wandb.mode=online \
+    wandb.entity=nics_marl \
+    wandb.project=omnidrones \
+    run_name_suffix="new_reward/only_is_near"
