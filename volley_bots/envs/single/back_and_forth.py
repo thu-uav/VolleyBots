@@ -498,7 +498,7 @@ class BackAndForth(IsaacEnv):
 
         reward_reach_target = 20.0 * is_near.unsqueeze(-1)
 
-        reward_dist_to_anchor = 0.05 / (1.0 + torch.square(1.0 * dist_to_anchor))
+        reward_dist_to_anchor = 0.2 / (1.0 + torch.square(2.0 * dist_to_anchor))
         # reward_dist_to_anchor = (
         #     reward_dist_to_anchor * 0.02 * (50 - self.target_time_count.view(-1, 1))
         # )
