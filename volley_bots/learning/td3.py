@@ -205,7 +205,6 @@ class TD3Policy(object):
                         "actor_grad_norm": actor_grad_norm,
                     }, []))
 
-            if (gradient_step + 1) % self.cfg.target_update_interval == 0:
                 with torch.no_grad():
                     soft_update(self.actor_target, self.actor, self.cfg.tau)
                     soft_update(self.critic_target, self.critic, self.cfg.tau)
