@@ -160,7 +160,6 @@ class BackAndForth(IsaacEnv):
         self.start_pos = torch.tensor(cfg.task.anchor, device=self.device)
         self.end_pos = torch.tensor(cfg.task.anchor_1, device=self.device)
 
-        # self.target_time_count = torch.zeros(self.num_envs, device=self.device)
         self.target_pos_all = self.end_pos.expand(self.num_envs, 1, 3)
         self.target_reached_nums = torch.zeros(self.num_envs, 1, device=self.device)
 
@@ -359,7 +358,6 @@ class BackAndForth(IsaacEnv):
 
     def _reset_idx(self, env_ids: torch.Tensor):
         self.drone._reset_idx(env_ids, self.training)
-        # self.target_time_count[env_ids] = 0
         self.target_reached_nums[env_ids] = 0
         self.target_pos_all[env_ids] = self.end_pos
         pos = self.start_pos.expand(env_ids.shape[0], 1, -1)
@@ -448,7 +446,7 @@ class BackAndForth(IsaacEnv):
                 up,
                 self.rpos,
             ]
-        # print("obs", [o.shape for o in obs])
+
         if self.time_encoding:
             t = (self.progress_buf / self.max_episode_length).unsqueeze(-1)
             obs.append(t.expand(-1, self.time_encoding_dim).unsqueeze(1))
@@ -474,13 +472,6 @@ class BackAndForth(IsaacEnv):
 
         is_near = (dist_to_anchor < 0.6).squeeze(-1) # (E,)
 
-        # self.target_time_count = torch.where(
-        #     is_near,
-        #     self.target_time_count + 1,
-        #     0,
-        # )
-
-        # is_reach = (self.target_time_count >= 5)
         reached_indices = torch.nonzero(is_near, as_tuple=True)
         self.target_reached_nums[reached_indices] += 1
 
@@ -499,9 +490,6 @@ class BackAndForth(IsaacEnv):
         reward_reach_target = 20.0 * is_near.unsqueeze(-1)
 
         reward_dist_to_anchor = 0.1 / (1.0 + torch.square(2.0 * dist_to_anchor))
-        # reward_dist_to_anchor = (
-        #     reward_dist_to_anchor * 0.02 * (50 - self.target_time_count.view(-1, 1))
-        # )
 
         drone_too_low = (self.drone.pos[..., 2] < 0.4)
         drone_too_high = (self.drone.pos[..., 2] > 5.0)
