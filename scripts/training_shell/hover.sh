@@ -1,5 +1,5 @@
 total_frames=500_000_000
-algorithm="mappo"  # mappo, maddpg, td3, sac, dqn
+algorithm="maddpg"  # mappo, maddpg, td3, sac, dqn
 action_transform=""  # PIDrate, null
 seed=0  # 0, 1, 2
 
@@ -16,4 +16,7 @@ CUDA_VISIBLE_DEVICES=0 python ../train.py headless=true \
     task.time_encoding=false \
     task.action_transform=${action_transform}\
     seed=${seed} \
-    wandb.mode=disabled \
+    wandb.mode=online \
+    wandb.entity=nics_marl \
+    wandb.project=omnidrones \
+    run_name_suffix="seed_0" \
