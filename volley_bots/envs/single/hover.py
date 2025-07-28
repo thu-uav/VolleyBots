@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import os
 
 import functorch
 import torch
@@ -189,12 +190,30 @@ class Hover(IsaacEnv):
             disable_gravity=True
         )
 
-        kit_utils.create_ground_plane(
-            "/World/defaultGroundPlane",
-            static_friction=1.0,
-            dynamic_friction=1.0,
-            restitution=0.0,
-        )
+        if self.use_local_usd:
+            # use local usd resources
+            usd_path = os.path.join(
+                os.path.dirname(__file__),
+                os.pardir,
+                "assets",
+                "default_environment.usd",
+            )
+            kit_utils.create_ground_plane(
+                "/World/defaultGroundPlane",
+                static_friction=1.0,
+                dynamic_friction=1.0,
+                restitution=0.0,
+                usd_path=usd_path,
+            )
+        else:
+            # use online usd resources
+            kit_utils.create_ground_plane(
+                "/World/defaultGroundPlane",
+                static_friction=1.0,
+                dynamic_friction=1.0,
+                restitution=0.0,
+            )
+
         drone_prim = self.drone.spawn(translations=[(0.0, 0.0, 2.)])[0]
         if self.has_payload:
             attach_payload(drone_prim.GetPath().pathString)
