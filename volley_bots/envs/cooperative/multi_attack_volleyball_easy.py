@@ -234,8 +234,6 @@ class MultiAttackVolleyballEasy(IsaacEnv):
         # x, y, z boundary for drone
         self.env_boundary_x = self.L / 2
         self.env_boundary_y = self.W / 2
-        # self.env_boundary_z_top = 2.0
-        # self.env_boundary_z_bot = 0.0
 
         # env paras
         self.time_encoding = self.cfg.task.time_encoding
@@ -671,7 +669,6 @@ class MultiAttackVolleyballEasy(IsaacEnv):
         )
 
         # ball and turn
-        # turn = torch.randint(0, 2, (len(env_ids),), device=self.device) # random initial turn
         turn = torch.zeros(len(env_ids), 1, device=self.device, dtype=torch.int64)
         self.turn[env_ids] = turn
 
@@ -713,7 +710,6 @@ class MultiAttackVolleyballEasy(IsaacEnv):
         if (env_ids == self.central_env_idx).any() and self._should_render(0):
             self.ball_traj_vis.clear()
             self.draw.clear_lines()
-            # self.debug_draw_region()
             self.debug_draw_turn()
             self.debug_draw_hit_racket([False, False], [False, False])
             self.debug_draw_near_target([False])
@@ -757,7 +753,6 @@ class MultiAttackVolleyballEasy(IsaacEnv):
 
         self.rpos_drone = torch.stack(
             [
-                # [..., drone_id, [x, y, z]]
                 self.drone.pos[..., 1, :] - self.drone.pos[..., 0, :],
                 self.drone.pos[..., 0, :] - self.drone.pos[..., 1, :],
             ],

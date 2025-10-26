@@ -24,14 +24,16 @@ from pxr import UsdShade, PhysxSchema
 
 from typing import Dict, List
 
-from .draw import draw_court
+from volley_bots.envs.volleyball.common import (
+    _carb_float3_add,
+    rectangular_cuboid_edges,
+)
+from volley_bots.envs.volleyball.draw import draw_court
 from .rules import determine_game_result_3v3, game_result_to_matrix
 
 from carb import Float3
 
 from omni.isaac.orbit.sensors import ContactSensorCfg, ContactSensor
-
-from .common import rectangular_cuboid_edges,_carb_float3_add
 
 
 from volley_bots.utils.torch import quat_axis
@@ -367,7 +369,6 @@ class Volleyball3v3_hier(IsaacEnv):
         self.FirstPass_last_hit_t = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
         self.FirstPass_goto_pos_before_hit = torch.tensor(cfg.task.get("FirstPass_goto_pos_before_hit"), device=self.device).expand(self.num_envs, 1, 3)
         self.FirstPass_hover_pos_after_hit = torch.tensor(cfg.task.get("FirstPass_hover_pos_after_hit"), device=self.device).expand(self.num_envs, 1, 3)
-        #self.FirstPass_serve_target = torch.zeros(self.num_envs, device=self.device, dtype=torch.long) # 0: left; 1: middle; 2: right
 
         self.SecPass_turn = torch.zeros(self.num_envs, device=self.device, dtype=torch.long) # 0: goto; 1: secpass; 3: hover
         self.SecPass_already_hit = torch.zeros((self.num_envs, 1), device=self.device, dtype=torch.bool)
@@ -733,16 +734,12 @@ class Volleyball3v3_hier(IsaacEnv):
             env_ids (torch.Tensor): (n_envs_to_reset,)
         """
 
-        # if self.central_env_idx in env_ids.tolist():
-        #     print("Central environment reset!")
-
         self.drone._reset_idx(env_ids, self.training)
 
         if self.random_turn:
             turn = torch.randint(0, 2, (len(env_ids),), device=self.device) # randomly choose the first team
         else:
             turn = torch.zeros(len(env_ids), dtype=torch.long, device=self.device) # always team 0 starts
-            # turn = torch.ones(len(env_ids), dtype=torch.long, device=self.device) # always team 1 starts
         self.which_side[env_ids] = turn
         self.last_hit_team[env_ids] = turn # init
 
@@ -802,7 +799,6 @@ class Volleyball3v3_hier(IsaacEnv):
             point_list_2 = [_carb_float3_add(p, self.central_env_pos) for p in point_list_2]
             self.draw.draw_lines(point_list_1, point_list_2, colors, sizes)
             self.debug_draw_region()
-            # self.debug_draw_turn()
 
         self.last_hit_step[env_ids] = -100
 
@@ -811,7 +807,6 @@ class Volleyball3v3_hier(IsaacEnv):
         self.switch_turn[env_ids] = False
 
         self.Att_attacking_target[env_ids] = torch.randint(0, 2, (len(env_ids),), device=self.device, dtype=torch.bool)
-        #self.FirstPass_serve_target[env_ids] = 2 * torch.randint(0, 2, (len(env_ids),), device=self.device, dtype=torch.long) # 0: left; 2: right
 
         self.hier_serve_ball_anchor[env_ids, 0, 0] = torch.rand(len(env_ids), device=self.device) * 1.8 + 4.2  # x: [5, 6]
         self.hier_serve_ball_anchor[env_ids, 0, 1] = torch.rand(len(env_ids), device=self.device) * 4 - 2  # y: [-0.5, 0.5]
@@ -826,7 +821,6 @@ class Volleyball3v3_hier(IsaacEnv):
             self.stats[key][env_ids] = stats_list[i]
 
         self.draw.clear_points()
-        # self.debug_draw_turn()
 
     def _pre_sim_step(self, tensordict: TensorDictBase):
         Opp_action: torch.Tensor = tensordict[("agents", "Opp_action")]
@@ -1349,10 +1343,8 @@ class Volleyball3v3_hier(IsaacEnv):
         self.log_results(draw, game_result, cases, drone_hit_ground, drone_too_close, self.central_env_idx)
 
         truncated = (self.progress_buf >= self.max_episode_length).unsqueeze(-1)
-        # terminated = (game_result != 0) | draw | drone_hit_ground.any(-1, keepdim=True) | drone_too_close.any(-1, keepdim=True)
         terminated = (game_result != 0)
         ball_hit_ground = (self.ball_pos[..., 2] < 0.2)
-        # terminated = ball_hit_ground
         done = truncated | terminated # [E, 1]
 
         # change turn
@@ -1370,9 +1362,6 @@ class Volleyball3v3_hier(IsaacEnv):
         self.hier_turn = torch.where((self.hier_turn == 5) & FirstPass_hit, 6, self.hier_turn) # (E,)
 
         self.switch_turn = torch.where((self.hier_turn ^ last_turn).bool(), True, False) # (E,)
-
-        # if self.switch_turn[self.central_env_idx]:
-        #     # self.debug_draw_turn()
 
         self.stats["actor_0_wins"] = (game_result == 1).float()
         self.stats["actor_1_wins"] = (game_result == -1).float()

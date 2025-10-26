@@ -131,29 +131,6 @@ def turn_to_obs(t: torch.Tensor) -> torch.Tensor:
     return table[t]
 
 
-# def turn_to_mask(turn: torch.Tensor, n: int = 2) -> torch.Tensor:
-    # """_summary_
-
-    # Args:
-    #     turn (torch.Tensor): (*,)
-
-    # Returns:
-    #     torch.Tensor: (*,n)
-    # """
-    # assert n in [2, 6]
-    # if n == 2:
-    #     table = torch.tensor([[True, False], [False, True]], device=turn.device)
-    # elif n == 6:
-    #     table = torch.tensor(
-    #         [
-    #             [True, True, True, False, False, False],
-    #             [False, False, False, True, True, True],
-    #         ],
-    #         device=turn.device,
-    #     )
-    # return table[turn]
-
-
 def calculate_penalty_drone_too_near_boundary(
     drone_pos: torch.Tensor, L: float, W: float
 ) -> torch.Tensor:
@@ -404,8 +381,6 @@ class Volleyball6v6(IsaacEnv):
             "truncated",
             "done",
         ]
-
-
 
         self.ball_vel_x_dir_world = torch.ones((self.num_envs, 12), device=self.device)
         self.ball_vel_x_dir_world[:, :6] = -1
@@ -660,9 +635,6 @@ class Volleyball6v6(IsaacEnv):
             env_ids (torch.Tensor): (n_envs_to_reset,)
         """
 
-        # if self.central_env_idx in env_ids.tolist():
-        #     print("Central environment reset!")
-
         self.drone._reset_idx(env_ids, self.training)
 
         drone_pos = self.init_pos[env_ids]
@@ -685,7 +657,6 @@ class Volleyball6v6(IsaacEnv):
             turn = torch.zeros(
                 len(env_ids), dtype=torch.long, device=self.device
             )  # always team 0 starts
-            # turn = torch.ones(len(env_ids), dtype=torch.long, device=self.device) # always team 1 starts
         self.which_side[env_ids] = turn
         self.last_hit_team[env_ids] = turn  # init
 
@@ -730,7 +701,6 @@ class Volleyball6v6(IsaacEnv):
             ]
             self.draw.draw_lines(point_list_1, point_list_2, colors, sizes)
             self.debug_draw_region()
-            # self.debug_draw_turn()
 
         self.last_hit_step[env_ids] = -100
 
@@ -764,15 +734,6 @@ class Volleyball6v6(IsaacEnv):
 
         team_0_pos_obs = pos.clone()  # (E, 12, 3)
         drones_rpos_team_0 = [(team_0_pos_obs - team_0_pos_obs[:, i, :].unsqueeze(1)).reshape(-1, 36) for i in range(6)]
-        # drones_rpos_0 = (team_0_pos_obs - team_0_pos_obs[:, 0, :].unsqueeze(1)).reshape(
-        #     -1, 18
-        # )
-        # drones_rpos_1 = (team_0_pos_obs - team_0_pos_obs[:, 1, :].unsqueeze(1)).reshape(
-        #     -1, 18
-        # )
-        # drones_rpos_2 = (team_0_pos_obs - team_0_pos_obs[:, 2, :].unsqueeze(1)).reshape(
-        #     -1, 18
-        # )
 
         idx = torch.cat([torch.arange(6, 12), torch.arange(0, 6)])
         team_1_pos_obs = pos.clone()[:, idx, :]
@@ -1122,7 +1083,6 @@ class Volleyball6v6(IsaacEnv):
             * self.ball_vel_x_dir_world
         )  # (E,12) shared
 
-        # reward_rpos_anchor = self.rpos_anchor_reward_coef * (1 - turn_to_mask(self.which_side, n=6).float()) / (1 + (self.drone.pos - self.anchor).norm(p=2, dim=-1)) # (E,6)
         reward_rpos_anchor = self.rpos_anchor_reward_coef / (
             1 + (self.drone.pos - self.anchor).norm(p=2, dim=-1)
         )  # (E,12)
@@ -1138,10 +1098,6 @@ class Volleyball6v6(IsaacEnv):
             * (self.drone.pos[..., 2] - 2.0).abs()
         )  # (E,12)
 
-        # self.stats["num_hits_drone_0"] += true_hit[:, 0].float().unsqueeze(-1)
-        # self.stats["num_hits_drone_1"] += true_hit[:, 1].float().unsqueeze(-1)
-        # self.stats["num_hits_drone_2"] += true_hit[:, 2].float().unsqueeze(-1)
-
         # switch turn
         last_which_side = self.which_side.clone()
         self.which_side = torch.where(
@@ -1150,8 +1106,6 @@ class Volleyball6v6(IsaacEnv):
         switch_side = torch.where(
             (self.which_side ^ last_which_side).bool(), True, False
         )  # (E,)
-        # if self._should_render(0) and switch_side[self.central_env_idx].item():
-        #     self.debug_draw_turn()
 
         switch_side_idx = torch.nonzero(switch_side, as_tuple=True)[0]
         self.drones_already_hit_in_one_turn[switch_side_idx] = torch.where(
@@ -1199,7 +1153,6 @@ class Volleyball6v6(IsaacEnv):
 
         misbahave = -penalty_drone_hit_ground - penalty_drone_too_close
         task = reward_win
-        # shaping = reward_rpos + reward_hit + reward_rpos_anchor + reward_ball_vel_x - penalty_rpy - penalty_pos_z
         shaping = reward_rpos + reward_hit + reward_rpos_anchor
 
         reward = misbahave + task + shaping

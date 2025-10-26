@@ -39,14 +39,6 @@ class func_gen:
 
 
 def cal_ori(roll, pitch, yaw, device):
-    # u1 = torch.sqrt(acc_x**2 + acc_y**2 + (acc_z+9.81)**2)
-    # roll = torch.asin(-acc_y / u1)
-    # pitch = torch.atan2(acc_x, (acc_z+9.81))
-
-    # pitch = torch.where(pitch > math.pi, pitch - math.pi, pitch)
-    # pitch = torch.where(pitch < -math.pi, pitch + math.pi, pitch)
-
-
 
     qx = torch.sin(roll / 2) * torch.cos(pitch / 2) * torch.cos(yaw / 2) - torch.cos(
         roll / 2
@@ -121,8 +113,6 @@ def uav_traj_create(traj_s, traj_v, traj_a, end_t, dtpye, device, time_period):
         v_l.append(vel)
         o_l.append(ori)
 
-    # np.save('traj_dict.npy', uav_traj)
-    # print("new traj has been created")
     return p_l, v_l, o_l
 
 
@@ -178,19 +168,11 @@ def return_ball_to_target_position_traj(
     uav_data = np.zeros(9)
     ball_vel_post = np.array([0.0, 0.0, 0.0])
 
-    # ball_pose, _ = ball.get_world_poses()
-    # ball_pose = ball_pose.squeeze().cpu().numpy()
-    # ball_vel = ball.get_linear_velocities().squeeze().cpu().numpy()
-    # if np.sqrt(np.dot((ball_pose-ball_target_pose),(ball_pose-ball_target_pose))) < 0.5:
-    #     print("chabie:",ball_pose-ball_target_pose)
-
     if np.abs(ball_vel_now[2]) >= 1.0 and ball_pose_now[2] >= hit_target_height + 0.1:
         ball_predict_pose, ball_predict_vel, ball_predict_t = racket.get_ball_traj(
             ball_pose_now, ball_vel_now, hit_target_height, kd_now, 0.005
         )
-        # print(ball_predict_pose)
         if ball_predict_t >= 0.4 and ball_pose_now[2] >= hit_target_height:
-            # drone_pose_now,_ = board.get_world_poses()
             drone_pose_now = board_pose_now
             drone_vel_linear_now = board_vel_now
             drone_acc_now = [0.0, 0.0, 0.0]
@@ -326,179 +308,11 @@ def return_ball_to_target_position_traj(
                     time_period=ddt,
                 )
 
-                # print("ball_vel_post", ball_vel_post)
-                # print("ball_predict_vel",ball_predict_vel)
-                # print("uav_data",uav_data[3:6])
-
         return p_l, v_l, o_l, p_l_re, v_l_re, o_l_re
 
     else:
-        # print("fail to create traj")
         return [], [], [], [], [], []
 
-
-# @hydra.main(version_base=None, config_path='.', config_name="demo")
-# def main(cfg):
-#     """
-#     a sample to show how to use the script
-#     """
-#     kd_now = 0.00                                                           # air drag of ball, but it is not so important
-#     target_height = 1.5                                                     # the height when board collides with call
-#     m = 0.003                                                               # the mass of ball
-#     p_l,v_l,o_l,p_l_re,v_l_re,o_l_re = [],[],[],[],[],[]
-#     new_traj = False                                                        # if true, the borad will execute traj
-#     enable_create_traj = False                                              # if true, the script will create traj
-
-#     ball_target_pose = np.array([1.0, 1.0, 1.5])                            # the position that the ball needs to reach
-#                                                                             #please don't let the height of the ball be less than the net's
-
-#     OmegaConf.resolve(cfg)                                                  # env
-#     simulation_app = init_simulation_app(cfg)
-#     print(OmegaConf.to_yaml(cfg))
-
-#     import volley_bots.utils.scene as scene_utils
-#     from omni.isaac.core.simulation_context import SimulationContext
-#     from volley_bots.controllers import RateController, Px4RateController
-#     from volley_bots.robots.drone import MultirotorBase
-#     from omni.isaac.core.objects import DynamicSphere, DynamicCylinder
-#     from omni.isaac.core.prims import RigidPrimView
-#     import omni.isaac.core.materials as materials
-
-#     sim = SimulationContext(
-#         stage_units_in_meters=1.0,
-#         physics_dt=cfg.sim.dt,
-#         rendering_dt=cfg.sim.dt,
-#         sim_params=cfg.sim,
-#         backend="torch",
-#         device=cfg.sim.device
-#     )
-#     print("finish sim")
-
-#     material = materials.PhysicsMaterial(
-#             prim_path="/World/Physics_Materials/physics_material_0",
-#             restitution=0.8
-#     )
-
-#     # create a ball
-#     ball = DynamicSphere(
-#         prim_path="/dynamic_sphere",
-#         name="dynamic_sphere",
-#         mass=m,
-#         position=np.array([5.0, 5.0, 0.0]),
-#         radius=0.02,
-#         color=np.array([255, 0, 255]),
-#         physics_material=material
-#     )
-#     ball = RigidPrimView(
-#         prim_paths_expr=ball.prim_path,
-#         reset_xform_properties=False,
-#         track_contact_forces=True,
-#     )
-
-#     # create a board
-#     board = DynamicCylinder(
-#         prim_path="/dynamic_cylinder",
-#         name="dynamic_cylinder",
-#         mass=m*200, # big mass to ignore the impact of collision
-#         position=np.array([-1.5, -1.5, 0.0]),
-#         radius=0.25,
-#         height=0.02,
-#         color= np.array([0, 0, 255]),
-#         physics_material=material
-#     )
-
-#     board = RigidPrimView(
-#         prim_paths_expr=board.prim_path,
-#         reset_xform_properties=False,
-#         track_contact_forces=False,
-#     )
-
-#     print("finish ball")
-#     scene_utils.design_scene()
-#     sim.reset()
-#     ball.initialize()
-#     board.initialize()
-
-
-#     sim._physics_sim_view.flush()
-#     ball.enable_rigid_body_physics()
-#     board.enable_rigid_body_physics()
-#     print("finish setting")
-
-
-#     # Exit with ctrl+c
-#     global stop_while
-#     stop_while = False
-#     def signal_handler(signal, frame):
-#         print ('\ntap Ctrl+C to exit!')
-#         global stop_while
-#         stop_while = True
-#     signal.signal(signal.SIGINT, signal_handler)
-
-#     sim_cnt = 0
-
-#     while True:
-#         if sim.is_stopped():
-#             break
-#         if not sim.is_playing():
-#             sim.render()
-#             continue
-#         sim.step(render=True)
-#         sim_cnt += 1
-
-#         if sim_cnt == 400:
-#             p = torch.tensor([[1., 1., 1.5]], device=sim.device)
-#             o = torch.tensor([[1.0, 0., 0., 0.]], device=sim.device)
-#             v = torch.tensor([[-1.0, -1.0, 7.0, 0., 0., 0.]], device=sim.device)
-#             init_pose = torch.tensor([[-1.5, -1.5, 1.5]], device=sim.device)
-#             init_ori = torch.tensor([[1.0, 0., 0., 0]], device=sim.device)
-#             board.set_world_poses(init_pose, init_ori)
-#             ball.set_world_poses(p,o)
-#             ball.set_velocities(v)
-#             print("<<<BALL THROWN!>>>")
-
-#             # When the ball moves towards the board, it is allowed to create trajectories
-#             enable_create_traj = True
-
-#         if sim_cnt >= 400:
-#             ball_pose, _ = ball.get_world_poses()
-#             ball_pose = ball_pose.squeeze().cpu().numpy()
-#             # ball_vel = ball.get_linear_velocities().squeeze().cpu().numpy()
-#             if np.sqrt(np.dot((ball_pose-ball_target_pose),(ball_pose-ball_target_pose))) < 0.5:
-#                 print("chabie:",ball_pose-ball_target_pose)
-
-#             # when the script has finished created traj, it is allowed the board to execute traj
-#             if new_traj:
-#                 if len(p_l) > 1:
-#                     board.set_world_poses(positions=p_l[0], orientations=o_l[0])
-#                     board.set_velocities(v_l[0])
-#                     p_l.pop(0)
-#                     o_l.pop(0)
-#                     v_l.pop(0)
-#                 else:
-#                     board.set_world_poses(positions=p_l_re[0], orientations=o_l_re[0])
-#                     board.set_velocities(v_l_re[0])
-#                     p_l_re.pop(0)
-#                     o_l_re.pop(0)
-#                     v_l_re.pop(0)
-#                     if len(p_l_re) < 2:
-#                         new_traj = False
-#                         board.set_world_poses(positions=init_pose, orientations=init_ori)
-#                         board.set_velocities(torch.tensor([[0., 0., 0., 0., 0., 0.]], device=sim.device))
-
-#             if enable_create_traj:
-#                 # create new traj for board
-#                 p_l,v_l,o_l,p_l_re,v_l_re,o_l_re = return_ball_to_target_position_traj(ball_target_pose, target_height, kd_now, board,ball, sim, cfg)
-#                 # let the board execute traj
-#                 if len(p_l) >= 2:
-#                     enable_create_traj = False
-#                     new_traj = True
-
-#         if stop_while:
-#             break
-
-#     simulation_app.close()
-#     print('Finish.')
 
 if __name__ == "__main__":
     p00 = torch.tensor([0, -0.0, 0.0], device="cpu", dtype=float)

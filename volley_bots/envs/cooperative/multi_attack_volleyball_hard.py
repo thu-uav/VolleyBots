@@ -262,19 +262,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
         # x, y, z boundary for drone
         self.env_boundary_x = self.L / 2
         self.env_boundary_y = self.W / 2
-        # self.env_boundary_z_top = 2.0
-        # self.env_boundary_z_bot = 0.0
 
-        # record new traj for board
-        # self.p_l,self.v_l,self.o_l,self.p_l_re,self.v_l_re,self.o_l_re,self.ls = [],[],[],[],[],[],[]
-
-        # for _ in range(self.num_envs):
-        #     self.p_l.append([])
-        #     self.v_l.append([])
-        #     self.o_l.append([])
-        #     self.p_l_re.append([])
-        #     self.v_l_re.append([])
-        #     self.o_l_re.append([])
         self.p_l = torch.zeros(
             (self.num_envs, 1, 3), device=self.device, dtype=self.dtype
         )
@@ -769,7 +757,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
         )
 
         # ball and turn
-        # turn = torch.randint(0, 2, (len(env_ids),), device=self.device) # random initial turn
         turn = torch.zeros(len(env_ids), 1, device=self.device, dtype=torch.int64)
         self.turn[env_ids] = turn
 
@@ -827,7 +814,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
         if (env_ids == self.central_env_idx).any() and self._should_render(0):
             self.ball_traj_vis.clear()
             self.draw.clear_lines()
-            # self.debug_draw_region()
             self.debug_draw_turn()
             self.debug_draw_hit_racket([False, False], [False, False])
             self.debug_draw_near_target([False])
@@ -910,17 +896,10 @@ class MultiAttackVolleyballHard(IsaacEnv):
                 self.board_excute_traj[valid_indices] = 1
 
                 idx = self.current_index[valid_indices]
-                """
-                只有1个轨迹点, 实际上 idx 这里都是0
-                there may be some bugs.
-                uav_data是用valid_mask算的，ball_predict_t是用env_indices算的
-                """
 
                 delta_dist = uav_data[:, :3] - self.init_board_offset  # (N,3)
 
                 dist = torch.norm(delta_dist, dim=-1) / ball_predict_t[valid_mask]
-
-
 
                 norm_uav_pos = torch.norm(delta_dist, dim=-1, keepdim=True)  #  (N,1)
                 scale = torch.where(
@@ -932,22 +911,16 @@ class MultiAttackVolleyballHard(IsaacEnv):
                 self.dist[valid_indices, idx, :] = scale * delta_dist * self.dt
                 self.p_l[valid_indices, idx, :] = self.dist[valid_indices, idx, :]
 
-
-                # print("print(uav_data[:, 6:9])", uav_data[:, 6:9])
                 rpy_r_vel = torch.abs(uav_data[:, 6]) / ball_predict_t[valid_mask]
                 rpy_p_vel = torch.abs(uav_data[:, 7]) / ball_predict_t[valid_mask]
                 rpy_y_vel = torch.abs(uav_data[:, 8]) / ball_predict_t[valid_mask]
-
 
                 rpy_m = (
                     torch.ones(rpy_r_vel.shape, device=self.device, dtype=self.dtype)
                     * self.rpy_max
                 )
 
-
                 sign = torch.sign(uav_data[:, 6:9])
-                # print(sign)
-
 
                 rpy_r_vel = (
                     torch.where(rpy_r_vel >= rpy_m, rpy_m, rpy_r_vel)
@@ -993,7 +966,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
 
                 self.current_index[valid_indices] += 1
 
-
         excute_mask = (self.board_excute_traj == 1) & (self.board_create_traj == 0)
         excute_indices = torch.nonzero(excute_mask).squeeze(-1)
 
@@ -1004,22 +976,13 @@ class MultiAttackVolleyballHard(IsaacEnv):
 
             hit_indices = excute_indices[hit_mask]
             recover_indices = excute_indices[recover_mask]
-            # print("hit_indices",hit_indices)
-            # print("recover_indices",recover_indices)
-
-            """self.board.set_world_poses(board_pos + self.envs_positions[env_ids], ball_rot, env_ids)
-            there may be some bugs.
-            """
 
             if hit_indices.numel() > 0:
-                # print("Hit")
                 self.board_pos, _ = self.get_env_poses(self.board.get_world_poses())
-                # print("self.board_pos",self.board_pos)
                 self.board.set_world_poses(
                     positions=self.p_l[hit_indices, 0]
                     + self.envs_positions[hit_indices]
                     + self.init_board_offset,
-                    # positions=self.envs_positions[hit_indices] + self.init_board_offset,
                     orientations=self.o_l[hit_indices, 0],
                     env_indices=hit_indices,
                 )
@@ -1053,8 +1016,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
                 self.rpy_per_step[recover_indices, 0] = 0
                 self.rpy[recover_indices, 0] = 0
                 self.current_index[recover_indices] = 0
-            # self.return_ball = 0
-
 
         reset_mask = ball_vel_now[:, 0] == 0
         reset_indices = torch.nonzero(reset_mask).squeeze(-1)
@@ -1062,7 +1023,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
         if reset_indices.numel() > 0:
             self.board_create_traj[reset_indices] = 1
             self.board_excute_traj[reset_indices] = 0
-
 
         create_mask = self.board_create_traj == 1
         create_indices = torch.nonzero(create_mask).squeeze(-1)
@@ -1083,7 +1043,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
             self.v_l[create_indices] = 0
             self.o_l[create_indices] = 0
             self.current_index[create_indices] = 0
-
 
         update_mask = ball_vel_now[:, 0] >= 0.5
         update_indices = torch.nonzero(update_mask).squeeze(-1)
@@ -1137,7 +1096,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
             turn_to_obs(self.turn),  # (E,2,2)
             self.id,  # (E,2,2)
         ]
-        # print("obs", [o.shape for o in obs])
         # [drone_num(2),
         # each_obs_dim: root_state(rpos_anchor)+rpos_drone(3)+rpos_ball(3)+ball_vel(3)+turn(1)]
 
@@ -1197,7 +1155,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
         drone_too_low = self.drone.pos[..., 2] < 2 * self.racket_radius  # (E, 2)
         drone_cross_net = self.drone.pos[..., 0] < 0  # (E, 2)
         drone_misbehave = drone_too_low | drone_cross_net  # (E, 2)
-        # drone_misbehave =  drone_too_low
 
         # drone hit ball
         ball_contact_forces = self.contact_sensor.data.net_forces_w  # (E, 1, 3)
@@ -1283,15 +1240,11 @@ class MultiAttackVolleyballHard(IsaacEnv):
         dist_to_target_xy = torch.norm(
             self.ball_pos[..., :2] - self.target, p=2, dim=-1
         )  # (E, 1)
-        # in_target = ball_too_low & (self.turn == 2) & (dist_to_target_xy < self.target_radius)  # (E, 1)
         env_return_ball_count = (
             self.env_return_ball_count.clone().unsqueeze(-1).to(torch.bool)
         )
         env_reset_count = self.env_reset_count.clone().unsqueeze(-1).to(torch.bool)
-        # self.env_return_ball_count = torch.zeros(self.num_envs, device=self.device, dtype=self.dtype)
-        # self.env_reset_count = torch.zeros(self.num_envs, device=self.device, dtype=self.dtype)
-        # print("env_return_ball_count",env_return_ball_count.shape)
-        # in_target = (success_hit[..., 1].unsqueeze(-1)) & (self.turn == 2) & ((env_return_ball_count & ball_out_of_court) | ((~env_return_ball_count)&env_reset_count)) # (E, 1)
+
         in_target = (
             ball_too_low
             & (self.turn == 2)
@@ -1302,7 +1255,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
             )
         )
 
-        # print("in_target",in_target.shape)
         reward_in_target = _task_reward_coeff * in_target  # share, sparse, (E, 1)
 
         _dist_coeff = 0.05
@@ -1361,7 +1313,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
         )  # share, sparse, (E, 1)
 
         _target_reward_coeff = 0.2
-        # dist_to_target_xy = torch.norm(self.ball_pos[..., :2] - self.target, p=2, dim=-1)  # (E, 1)
+
         reward_dist_to_target = (
             _target_reward_coeff
             * (self.turn == 2)
@@ -1369,7 +1321,6 @@ class MultiAttackVolleyballHard(IsaacEnv):
             * (10 - dist_to_target_xy).clamp(min=0)
         )  # share, sparse, (E, 1)
 
-        # shaping_reward = reward_dist_to_ball + reward_hit_direction + reward_spike_velocity + reward_dist_to_target  # (E, 2)
         shaping_reward = (
             reward_dist_to_ball + reward_hit_direction + reward_spike_velocity
         )  # (E, 2)
@@ -1380,7 +1331,7 @@ class MultiAttackVolleyballHard(IsaacEnv):
         truncated = (self.progress_buf >= self.max_episode_length).unsqueeze(
             -1
         )  # [E, 1]
-        # terminated = ball_misbehave # ball_misbehave | drone_misbehave.any(-1, keepdim=True) | wrong_hit.any(-1, keepdim=True) # [E, 1]
+
         terminated = (
             ball_misbehave
             | drone_misbehave.any(-1, keepdim=True)
