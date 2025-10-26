@@ -38,12 +38,12 @@ import pdb
 import numpy as np
 from omni.isaac.orbit.sensors import ContactSensor, ContactSensorCfg
 
-from .racket import (
+from .utils.racket import (
     ball_post_vel_without_kd,
     get_ball_traj_without_kd,
     get_uav_collision_data_without_kd,
 )
-from .return_ball import cal_ori
+from .utils.return_ball import cal_ori
 
 
 def calculate_ball_cross_the_net(ball_vel: torch.Tensor):

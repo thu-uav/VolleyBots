@@ -11,9 +11,8 @@ import quaternion
 import torch
 from omegaconf import OmegaConf
 
-import volley_bots.envs.cooperative.quadrocoptertrajectory as quadtraj
-
-import volley_bots.envs.cooperative.racket as racket
+import volley_bots.envs.cooperative.utils.quadrocoptertrajectory as quadtraj
+import volley_bots.envs.cooperative.utils.racket as racket
 from volley_bots import init_simulation_app
 
 
