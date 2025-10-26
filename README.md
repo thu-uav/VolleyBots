@@ -19,13 +19,21 @@ Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi 
 
 ## 📣 News
 
-🔥 **[2025.06.03] (v0.1.0)** Add a full 6 vs 6 volleyball task, new RL & MARL baselines, a hierarchical policy for the 3 vs 3 task, and extra reproducible training/evaluation shells and checkpoints.
+**[2025.09.29]** 🔥 [JuggleRL](https://arxiv.org/abs/2509.24892) details how we sim‑to‑real on the Solo Bump task and has been released on arXiv.
 
-**[2025.02.09] (v0.0.0)** Initial release with 8 tasks, 8 baselines, and reproducible training/evaluation shells & checkpoints.
+**[2025.09.19]** 🔥 Our testbed is accepted to ***NeurIPS 2025 Datasets & Benchmarks Track*** 🎉
+.
+
+**[2025.08.09]** 🔥 [HCSP](https://arxiv.org/abs/2505.04317) proposes a hierarchical RL framework to tackle the 3 vs 3 task and has been accepted to ***CoRL 2025*** 🎉
+. 
+
+**[2025.06.03]** Add a full 6 vs 6 volleyball task, new RL & MARL baselines, a hierarchical policy for the 3 vs 3 task, and extra reproducible training/evaluation shells and checkpoints. (v0.1.0)
+
+**[2025.02.09]** Initial release with 8 tasks, 8 baselines, and reproducible training/evaluation shells & checkpoints. (v0.0.0)
 
 ## 📌 Overview
 
-![](figures/overview.png)
+![](figures/overview.jpg)
 
 **Overview of the VolleyBots Testbed**. VolleyBots comprises three key components: 
 (1) Environment, supported by Isaac Sim and PyTorch, which defines entities, observations, actions, and reward functions; 
@@ -301,7 +309,7 @@ Our experiments were run on a workstation with:
 
 ## 📚 Citation
 
-Please cite [our paper](https://arxiv.org/abs/2502.01932) if you find our work useful:
+Please cite our paper if you find this testbed useful:
 
 ```bibtex
 @misc{xu2025volleybotstestbedmultidronevolleyball,
@@ -312,6 +320,29 @@ Please cite [our paper](https://arxiv.org/abs/2502.01932) if you find our work u
       archivePrefix={arXiv},
       primaryClass={cs.RO},
       url={https://arxiv.org/abs/2502.01932}, 
+}
+```
+Moreover, if you reference our [3 vs 3 hierarchical learning algorithm (HCSP)](https://arxiv.org/abs/2505.04317) or our [sim-to-real transfer work for the Solo Bump task (JuggleRL)](https://arxiv.org/abs/2509.24892), please also cite:
+```bibtex
+@misc{zhang2025masteringmultidronevolleyballhierarchical,
+      title={Mastering Multi-Drone Volleyball through Hierarchical Co-Self-Play Reinforcement Learning}, 
+      author={Ruize Zhang and Sirui Xiang and Zelai Xu and Feng Gao and Shilong Ji and Wenhao Tang and Wenbo Ding and Chao Yu and Yu Wang},
+      year={2025},
+      eprint={2505.04317},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2505.04317}, 
+}
+```
+```bibtex
+@misc{ji2025jugglerlmasteringballjuggling,
+      title={JuggleRL: Mastering Ball Juggling with a Quadrotor via Deep Reinforcement Learning}, 
+      author={Shilong Ji and Yinuo Chen and Chuqi Wang and Jiayu Chen and Ruize Zhang and Feng Gao and Wenhao Tang and Shu'ang Yu and Sirui Xiang and Xinlei Chen and Chao Yu and Yu Wang},
+      year={2025},
+      eprint={2509.24892},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2509.24892}, 
 }
 ```
 
