@@ -29,7 +29,7 @@ from volley_bots.robots.drone import MultirotorBase
 from volley_bots.utils.torch import euler_to_quaternion, quat_axis
 from volley_bots.views import RigidPrimView
 
-from .rules import determine_game_result_3v3, game_result_to_matrix
+from .utils.rules import determine_game_result_3v3, game_result_to_matrix
 
 
 def _carb_float3_add(a: Float3, b: Float3) -> Float3:

@@ -29,7 +29,7 @@ from volley_bots.envs.volleyball.common import (
     rectangular_cuboid_edges,
 )
 from volley_bots.envs.volleyball.draw import draw_court
-from .rules import determine_game_result_3v3, game_result_to_matrix
+from .utils.rules import determine_game_result_3v3, game_result_to_matrix
 
 from carb import Float3
 
