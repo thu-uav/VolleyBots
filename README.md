@@ -3,7 +3,7 @@
 [![IsaacSim](https://img.shields.io/badge/Isaac%20Sim-2023.1.0.hotfix.1-orange.svg)](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html)
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://docs.python.org/3/whatsnew/3.10.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/thu-uav/VolleyBots)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/thu-uav/VolleyBots)
 
 This repository is the official implementation of the paper "VolleyBots: A Testbed for Multi-Drone Volleyball Game Combining Motion Control and Strategic Play".
 
@@ -29,7 +29,7 @@ Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi 
 
 **[2025.06.03]** Add a full 6 vs 6 volleyball task, new RL & MARL baselines, a hierarchical policy for the 3 vs 3 task, and extra reproducible training/evaluation shells and checkpoints. (v0.1.0)
 
-**[2025.02.09]** Initial release with 8 tasks, 8 baselines, and reproducible training/evaluation shells & checkpoints. (v0.0.0)
+**[2025.02.09]** Initial release with 8 tasks, 8 baselines, and reproducible training/evaluation shells & checkpoints.
 
 ## 📌 Overview
 
