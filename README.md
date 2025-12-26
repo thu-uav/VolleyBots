@@ -6,7 +6,7 @@ Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi 
 
 [![paper](https://img.shields.io/badge/paper-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)](https://arxiv.org/pdf/2502.01932)
 &nbsp;
-[![Code](https://img.shields.io/badge/Code-000000?style=for-the-badge&logo=github&logoColor=000&logoColor=white)](https://github.com/thu-uav/HCSP)
+[![Code](https://img.shields.io/badge/Code-000000?style=for-the-badge&logo=github&logoColor=000&logoColor=white)](https://github.com/thu-uav/volleybots)
 &nbsp;
 [![Website](https://img.shields.io/badge/Website-1A73E8?style=for-the-badge&logo=googledocs&logoColor=white)](https://sites.google.com/view/thu-volleybots)
 
