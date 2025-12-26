@@ -1,31 +1,36 @@
 # 🏐 VolleyBots: A Testbed for Multi-Drone Volleyball Game Combining Motion Control and Strategic Play
 
-[![IsaacSim](https://img.shields.io/badge/Isaac%20Sim-2023.1.0.hotfix.1-orange.svg)](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html)
-[![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://docs.python.org/3/whatsnew/3.10.html)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/thu-uav/VolleyBots)
-
-This repository is the official implementation of the paper "VolleyBots: A Testbed for Multi-Drone Volleyball Game Combining Motion Control and Strategic Play".
-
-<p align="center">
-[ <a href="https://arxiv.org/pdf/2502.01932"><b>Paper</b></a> ] [ <a href="https://sites.google.com/view/thu-volleybots"><b>Project Website</b></a> ]
-</p>
-
-![](figures/tasks.png)
+<div align="center">
 
 Zelai Xu*, Ruize Zhang*, Chao Yu+, Huining Yuan, Xiangmin Yi, Shilong Ji, Chuqi Wang, Wenhao Tang, Feng Gao, Wenbo Ding, Xinlei Chen, Yu Wang+
 
+[![paper](https://img.shields.io/badge/paper-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)](https://arxiv.org/pdf/2502.01932)
+&nbsp;
+[![Code](https://img.shields.io/badge/Code-000000?style=for-the-badge&logo=github&logoColor=000&logoColor=white)](https://github.com/thu-uav/HCSP)
+&nbsp;
+[![Website](https://img.shields.io/badge/Website-1A73E8?style=for-the-badge&logo=googledocs&logoColor=white)](https://sites.google.com/view/thu-volleybots)
+
+![](figures/tasks.png)
+
+
+
 [News](#-news) | [Overview](#-overview) | [Installation](#-installation) | [Usage](#-usage) | [Checkpoints](#-checkpoints) | [Experimental Setup](#-experimental-setup) | [Citation](#-citation) | [Acknowledgement](#-acknowledgement)
+
+</div>
+
+
+
+
 
 ## 📣 News
 
+**[2025.11.19]** 🔥 We open-source the [HCSP code](https://github.com/thu-uav/HCSP).
+
 **[2025.09.29]** 🔥 [JuggleRL](https://arxiv.org/abs/2509.24892) details how we sim‑to‑real on the Solo Bump task and has been released on arXiv.
 
-**[2025.09.19]** 🔥 Our testbed is accepted to ***NeurIPS 2025 Datasets & Benchmarks Track*** 🎉
-.
+**[2025.09.19]** 🎉 Our testbed is accepted to ***NeurIPS 2025 Datasets & Benchmarks Track***.
 
-**[2025.08.09]** 🔥 [HCSP](https://arxiv.org/abs/2505.04317) proposes a hierarchical RL framework to tackle the 3 vs 3 task and has been accepted to ***CoRL 2025*** 🎉
-. 
+**[2025.08.09]** 🎉 [HCSP](https://arxiv.org/abs/2505.04317) proposes a hierarchical RL framework to tackle the 3 vs 3 task and has been accepted to ***CoRL 2025***. 
 
 **[2025.06.03]** Add a full 6 vs 6 volleyball task, new RL & MARL baselines, a hierarchical policy for the 3 vs 3 task, and extra reproducible training/evaluation shells and checkpoints. (v0.1.0)
 
